@@ -1,0 +1,56 @@
+import sqlite3
+import os
+from datetime import datetime
+
+DATABASE = os.path.join(os.environ["PROGRAMDATA"], "BeanchMark-MMS", "inventory - BeanchMark-MMS.db")
+
+def sync_invoices_to_batches():
+    if not os.path.exists(DATABASE):
+        print("DB not found")
+        return
+    
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    
+    print("--- Syncing Invoices to Batches ---")
+    
+    # Get all invoice items
+    cur.execute("""
+        SELECT ii.*, i.date as invoice_date, m.description as material_name
+        FROM invoice_items ii
+        JOIN invoices i ON ii.invoice_id = i.id
+        LEFT JOIN materials m ON ii.material = m.material_code
+    """)
+    items = cur.fetchall()
+    
+    for item in items:
+        # Check if this item already exists in batches
+        # We need a way to link them. Since there's no direct link, 
+        # we check for same batch_no, material_code, and quantity
+        cur.execute("""
+            SELECT id FROM batches 
+            WHERE batch_no = ? AND material_code = ? AND received_quantity = ? AND received_date = ?
+        """, (item['batch_no'], item['material'], item['quantity'], item['invoice_date']))
+        
+        if not cur.fetchone():
+            print(f"Syncing item: {item['material']} - {item['material_name']} (Qty: {item['quantity']})")
+            cur.execute("""
+                INSERT INTO batches (batch_no, material_code, description, received_quantity, available_quantity, uom, received_date, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                item['batch_no'], 
+                item['material'], 
+                item['material_name'] or item['material'], 
+                item['quantity'], 
+                item['quantity'], 
+                item['unit'], 
+                item['invoice_date'], 
+                item['invoice_date'] + " 00:00:00"
+            ))
+            
+    conn.commit()
+    print("Sync completed.")
+    conn.close()
+
+sync_invoices_to_batches()

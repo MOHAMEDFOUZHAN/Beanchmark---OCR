@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Transfers / Returns</title>
+
+  <style>
+    /* ================== SCREEN STYLES ================== */
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #E6EDF6;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .site-header {
+      background-color: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+
+    .logo-container h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+
+    nav {
+      background-color: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+    }
+
+    nav a:hover {
+      background-color: #0C294B;
+    }
+
+    nav a.active {
+      background-color: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      overflow-x: auto;
+      flex: 1 0 auto;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .top-bar form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .top-bar label {
+      color: #0C294B;
+      font-weight: bold;
+    }
+
+    .top-bar input {
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      background-color: #0C294B;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #093267;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 14px;
+      min-width: 900px;
+    }
+
+    table thead {
+      background-color: #0C294B;
+      color: white;
+    }
+
+    table th,
+    table td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    table tr:nth-child(even) {
+      background-color: #f4f6f9;
+    }
+
+    .actions button {
+      margin: 0 3px;
+      padding: 5px 10px;
+    }
+
+    .edit {
+      background-color: #0C294B;
+    }
+
+    .delete {
+      background-color: red;
+    }
+
+    footer {
+      margin-top: 40px;
+      background-color: #0C294B;
+      color: white;
+      text-align: center;
+      padding: 10px;
+    }
+
+    /* Hide print items on screen */
+    .print-page-title,
+    .print-date-range {
+      display: none;
+    }
+
+    /* ================== PRINT OPTIMIZATION ================== */
+    /* Print Header Styles */
+    .print-only-header {
+      display: none;
+    }
+
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 8mm;
+      }
+
+      .print-only-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 20px;
+        font-family: Arial, sans-serif;
+        color: black;
+        border-bottom: 2px solid black;
+        padding-bottom: 10px;
+      }
+
+      .print-line-1 {
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .print-line-2 {
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .print-line-3 {
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 5px;
+      }
+
+      .print-line-4 {
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      /* Hide screen UI */
+      .site-header,
+      nav,
+      .top-bar,
+      footer,
+      button,
+      .actions,
+      form,
+      a[href="/logout"] {
+        display: none !important;
+      }
+
+      .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+      }
+
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: 1px solid black !important;
+      }
+
+      th,
+      td {
+        border: 1px solid black !important;
+        padding: 6px !important;
+        font-size: 11px !important;
+        color: black !important;
+      }
+
+      th {
+        background-color: #f2f2f2 !important;
+        color: black !important;
+      }
+
+      /* Hide actions column in print */
+      th:last-child,
+      td:last-child {
+        display: none !important;
+      }
+    }
+
+    /* Hide print-only info on screen */
+    .print-page-title,
+    .print-date-range {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="site-header no-print">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Transfers / Returns</h1>
+    </div>
+    <a href="/logout" style="color:white;text-decoration:none;">Logout</a>
+  </header>
+
+  <div class="print-only-header">
+    <div class="print-line-1">MATERIAL MANAGEMENT</div>
+    <div class="print-line-2">BENCHMARK FACTORY</div>
+    <div class="print-line-3">
+      <span class="report-name">Transfers / Returns List</span>
+      {% set dept = request.args.get('dept') %}
+      {% if dept %}
+      <span class="category"> - {{ dept }}</span>
+      {% endif %}
+    </div>
+    <div class="print-line-4">
+      {% set from_date = request.args.get('from_date', '') %}
+      {% set to_date = request.args.get('to_date', '') %}
+      {% if from_date or to_date %}
+      Date: From {{ from_date or 'N/A' }} To {{ to_date or 'N/A' }}
+      {% endif %}
+    </div>
+  </div>
+
+  <nav class="no-print">
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="container">
+
+    <!-- PRINT ONLY -->
+    <div class="print-page-title no-print">Transfers / Returns Details</div>
+    <div class="print-date-range no-print">
+      <strong>Period:</strong>
+      From <span id="print-from-date">All</span> –
+      To <span id="print-to-date">All</span>
+    </div>
+
+
+
+    <div class="top-bar">
+      <form method="GET" action="/transfers">
+        <label>From:</label>
+        <input type="date" name="from_date" value="{{ from_date }}">
+        <label>To:</label>
+        <input type="date" name="to_date" value="{{ to_date }}">
+
+        <label>Department:</label>
+        <select name="dept" style="padding: 8px; border-radius: 5px; border: 1px solid #ccc;">
+          <option value="">All Departments</option>
+          <optgroup label="Standard Departments">
+            {% for d in standard_depts %}
+            <option value="{{ d }}" {% if d==dept_filter %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </optgroup>
+          <optgroup label="Others (From History)">
+            {% for d in all_departments %}
+            {% if d not in standard_depts %}
+            <option value="{{ d }}" {% if d==dept_filter %}selected{% endif %}>{{ d }}</option>
+            {% endif %}
+            {% endfor %}
+          </optgroup>
+        </select>
+
+        <button type="submit">Filter</button>
+        <button type="button" onclick="window.location.href='/transfers'">Reset</button>
+      </form>
+
+      <div class="button-group">
+        <button onclick="location.href='/transfers/add'">+ Add Transfer</button>
+        <button onclick="window.print()">Print</button>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Code</th>
+          <th>Description</th>
+          <th>Outward</th>
+          <th>Return</th>
+          <th>Availability</th>
+          <th>Department</th>
+          <th>Person</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for t in transfers %}
+        <tr>
+          <td>{{ t.date or 'N/A' }}</td>
+          <td>{{ t.code }}</td>
+          <td>{{ t.description }}</td>
+          <td>{{ t.outward | format_qty(t.units) }}</td>
+          <td>{{ t.return_units | format_qty(t.units) if t.return_units > 0 else '-' }}</td>
+          <td>{{ t.availability | format_qty(t.units) }}</td>
+          <td>{{ t.department }}</td>
+          <td>{{ t.person or '-' }}</td>
+
+          <td class="actions">
+            <a href="/transfers/edit/{{ t.id }}">
+              <button class="edit">Edit</button>
+            </a>
+
+            <a href="/transfers/delete/{{ t.id }}"
+              onclick="return confirm('Are you sure you want to delete this transfer record? Stock will be adjusted back.');">
+              <button class="delete">Delete</button>
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9">No transfer or return records found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </div>
+
+  <footer>© 2025 Material Management System | Maple Pro</footer>
+  <script>
+    window.addEventListener('beforeprint', () => {
+      const fromInput = document.querySelector('input[name="from_date"]');
+      const toInput = document.querySelector('input[name="to_date"]');
+
+      document.getElementById('print-from-date').textContent =
+        fromInput && fromInput.value ? fromInput.value : 'All';
+
+      document.getElementById('print-to-date').textContent =
+        toInput && toInput.value ? toInput.value : 'All';
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('nav a');
+      let bestMatch = null;
+      let maxLength = -1;
+
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath === href) {
+          bestMatch = link;
+          maxLength = href.length;
+        } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+          bestMatch = link;
+          maxLength = href.length;
+        }
+      });
+
+      if (bestMatch) {
+        bestMatch.classList.add('active');
+      }
+    });
+  </script>
+
+  <footer>© 2025 Material Management System | Developed by Maple Pro</footer>
+</body>
+
+</html>

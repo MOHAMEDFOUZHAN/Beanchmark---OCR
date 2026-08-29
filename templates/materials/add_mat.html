@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Add New Material</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #E6EDF6;
+    }
+
+    header {
+      background-color: #0C294B;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .top-bar button {
+      background-color: #0C294B;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #0C294B;
+    }
+
+    .form-group input {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .actions button {
+      background-color: #0C294B;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .actions button:hover {
+      background-color: #093267;
+    }
+
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo" height="45" width="45"
+        style="border-radius:8px; background:#fff;">
+      <h1 style="font-size:22px; margin:0; color:white;">Add New Material</h1>
+    </div>
+    <a href="/logout" style="color:white; text-decoration:none; font-weight:bold;">Logout</a>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="container">
+    <div class="top-bar">
+      <button onclick="location.href='/materials'">← Back to List</button>
+      <span>Date: {{ date }}</span>
+    </div>
+
+    <form method="POST" action="/materials/add">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Material Code</label>
+          <input type="text" name="material_code" required>
+        </div>
+
+        <div class="form-group">
+          <label>Quantity (units)</label>
+          <input type="number" name="quantity" required>
+        </div>
+
+        <div class="form-group">
+          <label>Purchase Date</label>
+          <input type="date" name="purchase_date" required>
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <input type="text" name="category" required>
+        </div>
+
+        <div class="form-group">
+          <label>Unit Price</label>
+          <input type="number" step="0.01" name="unit_price" required>
+        </div>
+
+        <div class="form-group">
+          <label>Date of Expiry</label>
+          <input type="date" name="expiry_date">
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" name="description">
+        </div>
+
+        <div class="form-group">
+          <label>Reorder Level (units)</label>
+          <input type="number" name="reorder_level" required>
+        </div>
+
+        <div class="form-group">
+          <label>Lot Number</label>
+          <input type="text" name="lot_no">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit">Save</button>
+        <button type="reset">Clear</button>
+      </div>
+    </form>
+  </div>
+</body>
+
+</html>

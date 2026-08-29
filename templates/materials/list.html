@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>View Material</title>
+  <style>
+    /* ================= SCREEN STYLES ================= */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #E6EDF6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .site-header {
+      background-color: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+
+    .logo-container h1 {
+      font-size: 22px;
+      margin: 0;
+      color: white;
+    }
+
+    .site-header a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    nav {
+      background-color: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+    }
+
+    nav a:hover {
+      background-color: #0C294B;
+    }
+
+    nav a.active {
+      background-color: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    nav a.active {
+      background-color: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      overflow-x: auto;
+    }
+
+    main {
+      flex: 1 0 auto;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .top-bar button {
+      background-color: #0C294B;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+      font-size: 14px;
+    }
+
+    thead {
+      background-color: #0C294B;
+      color: white;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f4f6f9;
+    }
+
+    .text-left {
+      text-align: left;
+    }
+
+    footer {
+      margin-top: 40px;
+      background-color: #0C294B;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Print Header Styles */
+    .print-only-header {
+      display: none;
+    }
+
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 8mm;
+      }
+
+      .print-only-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 20px;
+        font-family: Arial, sans-serif;
+        color: black;
+        border-bottom: 2px solid black;
+        padding-bottom: 10px;
+      }
+
+      .print-line-1 {
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .print-line-2 {
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .print-line-3 {
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 5px;
+      }
+
+      .print-line-4 {
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      /* Hide UI elements */
+      .site-header,
+      nav,
+      .top-bar,
+      footer,
+      button,
+      .no-print {
+        display: none !important;
+      }
+
+
+      .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+      }
+
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: 1px solid black !important;
+      }
+
+      th,
+      td {
+        border: 1px solid black !important;
+        padding: 5px !important;
+        font-size: 10px !important;
+      }
+
+      th {
+        background-color: #eee !important;
+        color: black !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>View Material</h1>
+    </div>
+    <a href="/logout">Logout</a>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/materials/master">Materials Master</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="print-only-header">
+    <div class="print-line-1">MATERIAL MANAGEMENT</div>
+    <div class="print-line-2">BENCHMARK FACTORY</div>
+    <div class="print-line-3">
+      <span class="report-name">Live Materials Details</span>
+      {% if selected_category %}
+      <span class="category"> - {{ selected_category }}</span>
+      {% endif %}
+    </div>
+    <div class="print-line-4">
+      {% if from_date or to_date %}
+      Date: From {{ from_date | format_date or 'N/A' }} To {{ to_date | format_date or 'N/A' }}
+      {% endif %}
+    </div>
+  </div>
+
+  <main>
+    <div class="container">
+      <div class="print-page-title no-print">Live Materials Details</div>
+
+      <div class="top-bar" style="justify-content: space-between; align-items: center;">
+        <form action="/materials" method="GET" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <label for="search_code" style="font-weight: bold; color: #0C294B;">Code:</label>
+            <input type="text" name="search_code" id="search_code" value="{{ search_code }}"
+              placeholder="Search by code..."
+              style="padding: 6px 12px; border-radius: 5px; border: 1px solid #ccc; width: 140px;">
+          </div>
+
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <label for="category" style="font-weight: bold; color: #0C294B;">Category:</label>
+            <select name="category" id="category"
+              style="padding: 6px 12px; border-radius: 5px; border: 1px solid #ccc;">
+              <option value="">All Categories</option>
+              {% for cat in categories %}
+              <option value="{{ cat }}" {% if cat==selected_category %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <label style="font-weight: bold; color: #0C294B;">From:</label>
+            <input type="date" name="from_date" value="{{ from_date }}"
+              style="padding: 6px 10px; border-radius: 5px; border: 1px solid #ccc;">
+          </div>
+
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <label style="font-weight: bold; color: #0C294B;">To:</label>
+            <input type="date" name="to_date" value="{{ to_date }}"
+              style="padding: 6px 10px; border-radius: 5px; border: 1px solid #ccc;">
+          </div>
+
+          <button type="submit"
+            style="background-color: #0C294B; color: white; padding: 6px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Filter</button>
+
+          {% if selected_category or search_code or from_date or to_date %}
+          <a href="/materials" style="color: #666; text-decoration: none; font-size: 14px; font-weight: bold;">Clear</a>
+          {% endif %}
+        </form>
+        <button onclick="window.print()">Print</button>
+      </div>
+
+      <table id="materialTable">
+        <thead>
+          <tr>
+            <th style="width: 50px;"></th> <!-- For Expand Icon -->
+            <th>Material Code</th>
+            <th>Description</th>
+            <th>Opening</th>
+            <th>Purchased</th>
+            <th>Transfer Out</th>
+            <th>Return In</th>
+            <th>Closing</th>
+            <th>Shelves/Bin</th>
+            <th>Reorder Level</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for item in stock_data %}
+          <tr class="master-row" onclick="toggleLots('lots-{{ loop.index }}')">
+            <td style="cursor: pointer; color: #0C294B; font-weight: bold;">
+              {% if item.lots|length > 0 %}
+              <span id="icon-lots-{{ loop.index }}">▶</span>
+              {% endif %}
+            </td>
+            <td>{{ item.code }}</td>
+            <td class="text-left">{{ item.name }}</td>
+
+            <td>{{ item.opening_stock | format_qty(item.unit) }}</td>
+
+            <td>{{ item.purchased_stock | format_qty(item.unit) }}</td>
+
+            <td>{{ item.transferred_stock | format_qty(item.unit) }}</td>
+
+            <td>{{ item.returned_stock | format_qty(item.unit) }}</td>
+
+            <td style="font-weight:bold; color:#0C294B;">{{ item.closing_stock | format_qty(item.unit) }}</td>
+            <td style="color:#c0392b; font-weight:bold;">{{ item.location }}</td>
+            <td>{{ item.reorder_level | format_qty(item.unit) }}</td>
+          </tr>
+
+          <!-- Lot Details (Hidden by default) -->
+          <tr id="lots-{{ loop.index }}" class="lot-details-row" style="display: none; background-color: #f9f9f9;">
+            <td colspan="10" style="padding: 0;">
+              <div style="padding: 10px 20px;">
+                <h4 style="margin: 0 0 10px 0; color: #0C294B; font-size: 14px;">Lot Breakup for {{ item.name }}</h4>
+                <table style="width: 100%; border: 1px solid #eee; background: white; min-width: auto;">
+                  <thead style="background-color: #f1f1f1; color: #333;">
+                    <tr>
+                      <th>Lot Number</th>
+                      <th>Purchase Date</th>
+                      <th>Expiry Date</th>
+                      <th>Opening</th>
+                      <th>Current Availability</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for lot in item.lots %}
+                    <tr>
+                      <td><strong>{{ lot.lot_no }}</strong></td>
+                      <td>{{ lot.purchase_date or '-' }}</td>
+                      <td
+                        style="color: {% if lot.expiry_date != '-' %}#d35400{% else %}inherit{% endif %}; font-weight: bold;">
+                        {{ lot.expiry_date }}
+                      </td>
+                      <td>{{ lot.opening | format_qty(item.unit) }}</td>
+                      <td style="font-weight: bold;">{{ lot.closing | format_qty(item.unit) }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="11">No stock data found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <style>
+        .master-row:hover {
+          background-color: #eef4ff !important;
+          cursor: pointer;
+        }
+
+        .lot-details-row table th,
+        .lot-details-row table td {
+          padding: 6px;
+          font-size: 12px;
+          border: 1px solid #eee;
+          text-align: center;
+        }
+      </style>
+
+      <script>
+        function toggleLots(id) {
+          const row = document.getElementById(id);
+          const icon = document.getElementById('icon-' + id);
+          if (row.style.display === "none") {
+            row.style.display = "table-row";
+            if (icon) icon.innerText = "▼";
+          } else {
+            row.style.display = "none";
+            if (icon) icon.innerText = "▶";
+          }
+        }
+      </script>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('nav a');
+      let bestMatch = null;
+      let maxLength = -1;
+
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath === href) {
+          bestMatch = link;
+          maxLength = href.length;
+        } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+          bestMatch = link;
+          maxLength = href.length;
+        }
+      });
+
+      if (bestMatch) {
+        bestMatch.classList.add('active');
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Return</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #E6EDF6; }
+    .container { max-width: 600px; margin: 40px auto; background: white; padding: 20px; border-radius: 8px; }
+    h1 { text-align: center; color: #0C294B; }
+    .form-group { margin-bottom: 15px; }
+    label { font-weight: bold; color: #0C294B; display: block; margin-bottom: 5px; }
+    input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+    .actions { text-align: center; margin-top: 20px; }
+    .actions button {
+      background-color: #0C294B; color: white; border: none;
+      padding: 10px 20px; border-radius: 5px; cursor: pointer;
+    }
+    .actions button:hover { background-color: #093267; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Add Return</h1>
+    <form method="POST" action="/returns/add">
+      <div class="form-group">
+        <label>Material Code</label>
+        <input type="text" name="code" required>
+      </div>
+      <div class="form-group">
+        <label>Department</label>
+        <input type="text" name="department" required>
+      </div>
+      <div class="form-group">
+        <label>Person</label>
+        <input type="text" name="person" required>
+      </div>
+      <div class="form-group">
+        <label>Quantity</label>
+        <input type="number" name="quantity" required>
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" name="date" required>
+      </div>
+      <div class="actions">
+        <button type="submit">Save</button>
+        <button type="button" onclick="history.back()">Back</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

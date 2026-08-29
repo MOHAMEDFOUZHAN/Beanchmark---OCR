@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Reports Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #E6EDF6;
+    }
+
+    /* HEADER STYLES */
+    .site-header {
+      background-color: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      object-fit: contain;
+      /* Ensures the leaf fits nicely */
+      background-color: #fff;
+      padding: 2px;
+      /* Small padding to make the leaf pop */
+    }
+
+    .logo-container h1 {
+      font-size: 22px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      color: white;
+      margin: 0;
+    }
+
+    .site-header a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    /* Navigation */
+    nav {
+      background-color: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+      display: inline-block;
+    }
+
+    nav a:hover {
+      background-color: #0C294B;
+    }
+
+    nav a.active {
+      background-color: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 40px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 40px;
+      color: #0C294B;
+      font-size: 24px;
+    }
+
+    /* --- UPDATED GRID LAYOUT (Smart Auto-Grid) --- */
+    .report-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .report-links a {
+      background-color: #0C294B;
+      color: white;
+      padding: 30px 20px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      transition: 0.3s;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
+
+      /* Fixed width for uniform look */
+      width: 30%;
+      min-width: 250px;
+
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .report-links a:hover {
+      background-color: #093267;
+      transform: translateY(-3px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    footer {
+      margin-top: 40px;
+      background-color: #0C294B;
+      color: white;
+      text-align: center;
+      padding: 10px;
+    }
+
+    /* Responsive */
+    @media(max-width:900px) {
+      .report-links a {
+        width: 45%;
+      }
+    }
+
+    @media(max-width:600px) {
+      .report-links a {
+        width: 100%;
+      }
+
+      nav {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="logo-container">
+      <!-- ⭐ UPDATED: Using the maple leaf logo concept -->
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Reports Dashboard</h1>
+    </div>
+    <a href="/logout">Logout</a>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="container">
+    <h2>Select a Report</h2>
+
+    <div class="report-links">
+      <a href="/reports/daily_ledger">Daily Stock Ledger</a>
+      <a href="/reports/department">Material Transfers by Dept</a>
+
+      <a href="/reports/reorder">Reorder Report</a>
+      <a href="/reports/storage">Stock & Dispatch Summary</a>
+      <a href="/reports/outofstock">Out of Stock</a>
+      <a href="/reports/expiring" class="warning">Expiring Soon (Next 30 Days)</a>
+      <a href="/reports/utilization" style="background:#27ae60;">Material Utilization (MUR)</a>
+    </div>
+  </div>
+
+  <footer>© 2025 Material Management System | Maple Pro</footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('nav a');
+      let bestMatch = null;
+      let maxLength = -1;
+
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath === href) {
+          bestMatch = link;
+          maxLength = href.length;
+        } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+          bestMatch = link;
+          maxLength = href.length;
+        }
+      });
+
+      if (bestMatch) {
+        bestMatch.classList.add('active');
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Dispatch</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #E6EDF6;
+    }
+
+    .site-header {
+      background: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    nav {
+      background: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+    }
+
+    nav a:hover {
+      background: #0C294B;
+    }
+
+    nav a.active {
+      background: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #0C294B;
+      margin-bottom: 15px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    input[readonly] {
+      background: #e9ecef;
+    }
+
+    textarea {
+      resize: none;
+    }
+
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .save {
+      background: #0C294B;
+      color: white;
+    }
+
+    .back {
+      background: #6c757d;
+      color: white;
+    }
+
+    /* Single Input Container Style */
+    .input-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .unit-display {
+      font-weight: bold;
+      color: #0C294B;
+      min-width: 40px;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Edit Dispatch</h1>
+    </div>
+    <a href="/logout">Logout</a>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="container">
+    <form method="POST">
+      <h2>Edit Dispatch</h2>
+      <div class="form-grid">
+        <div><label>Date</label><input type="date" name="date" id="date" value="{{ dispatch.date }}" required></div>
+        <div><label>Product Name</label><input type="text" name="material_name" id="material_name"
+            value="{{ dispatch.material_name or dispatch.product }}" required></div>
+
+        <div>
+          <label>Batch Number</label>
+          <input type="text" name="batch_no" id="batch_no" value="{{ dispatch.batch_no }}" readonly required
+            style="background-color: #e9ecef;">
+        </div>
+
+        <div>
+          <label>Base Unit</label>
+          <select name="units" id="units" onchange="updateUnitLabels(this.value)" required>
+            <option value="">--Select Unit--</option>
+            <option value="kg" {% if dispatch.units=='kg' %}selected{% endif %}>Kilogram (kg)</option>
+            <option value="litre" {% if dispatch.units=='litre' %}selected{% endif %}>Litre (L)</option>
+            <option value="pcs" {% if dispatch.units=='pcs' %}selected{% endif %}>Pieces</option>
+            <option value="box" {% if dispatch.units=='box' %}selected{% endif %}>Box</option>
+            <option value="meter" {% if dispatch.units=='meter' %}selected{% endif %}>Meter</option>
+            <option value="can" {% if dispatch.units=='can' %}selected{% endif %}>Can</option>
+            <option value="tin" {% if dispatch.units=='tin' %}selected{% endif %}>Tin</option>
+            <option value="roll" {% if dispatch.units=='roll' %}selected{% endif %}>Roll</option>
+            <option value="sheet" {% if dispatch.units=='sheet' %}selected{% endif %}>Sheet</option>
+            <option value="bags" {% if dispatch.units=='bags' %}selected{% endif %}>Bags</option>
+            <option value="carton" {% if dispatch.units=='carton' %}selected{% endif %}>Carton</option>
+            <option value="bottle" {% if dispatch.units=='bottle' %}selected{% endif %}>Bottle</option>
+            <option value="packet" {% if dispatch.units=='packet' %}selected{% endif %}>Packet</option>
+            <option value="bundle" {% if dispatch.units=='bundle' %}selected{% endif %}>Bundle</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Quantity Dispatch</label>
+          <div class="input-group">
+            <input type="number" step="0.001" name="quantity" id="quantity" required>
+            <span id="unitLabel" class="unit-display">-</span>
+          </div>
+        </div>
+        <div><label>Department</label><input type="text" name="department" value="{{ dispatch.department }}"></div>
+        <div><label>Location</label><input type="text" name="location" value="{{ dispatch.location }}"></div>
+        <div><label>Remarks</label><textarea name="remarks" rows="3">{{ dispatch.remarks or '' }}</textarea></div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="back" onclick="window.location.href='/dispatch'">Back</button>
+        <button type="submit" class="save">Update Dispatch</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // 1. Load the full value directly or from dispatch object
+      const qty = parseFloat({{ dispatch.quantity or 0 }});
+    const unit = "{{ dispatch.units or '' }}";
+
+    const qtyInput = document.getElementById("quantity");
+    if (qtyInput) qtyInput.value = qty;
+
+    updateUnitLabels(unit);
+    const unitSelect = document.getElementById("units");
+    if (unitSelect && unit) {
+      unitSelect.value = unit;
+    }
+
+    // 2. Active Link Highlighting
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('nav a');
+    let bestMatch = null;
+    let maxLength = -1;
+
+    navLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      if (currentPath === href) {
+        bestMatch = link;
+        maxLength = href.length;
+      } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+        bestMatch = link;
+        maxLength = href.length;
+      }
+    });
+
+    if (bestMatch) {
+      bestMatch.classList.add('active');
+    }
+    });
+
+    function updateUnitLabels(unit) {
+      const label = document.getElementById("unitLabel");
+      if (label) label.textContent = unit ? unit : "-";
+    }
+  </script>
+</body>
+
+</html>

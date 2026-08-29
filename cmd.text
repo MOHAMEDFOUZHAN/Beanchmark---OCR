@@ -1,0 +1,64 @@
+pyinstaller --onefile --noconsole --icon=static/images/logo.ico --add-data "templates;templates" --add-data "static;static" main.py
+
+
+pyinstaller --onefile --noconsole ^
+--icon=static/images/logo.ico ^
+--add-data "templates;templates" ^
+--add-data "static;static" ^
+--add-data "DejaVuSans.ttf;." ^
+MMS.py
+
+pyinstaller --onefile --noconsole ^
+--icon=static/images/logo.ico ^
+--add-data "templates;templates" ^
+--add-data "static;static" ^
+--add-data "DejaVuSans.ttf;." ^
+--add-data "backup_manager.py;." ^
+--add-data "smart_report_mailer.py;." ^
+--hidden-import backup_manager ^
+MMS.py
+
+
+
+taskkill /f /im MMS.exe
+taskkill /f /im MMS.py
+taskkill /f /im python.exe
+taskkill /f /im pythonw.exe
+taskkill /f /im webview.exe
+
+
+
+pyinstaller --onefile --noconsole ^
+--icon=static/images/logo.ico ^
+--add-data "templates;templates" ^
+--add-data "static;static" ^
+--add-data "DejaVuSans.ttf;." ^
+--hidden-import backup_manager ^
+--hidden-import smart_report_mailer ^
+MMS.py
+
+
+# -----------------------------
+# Run Flask inside Desktop App (pywebview)
+# -----------------------------
+def run_flask():
+    app.run(host="127.0.0.1", port=5002, debug=False)
+
+if __name__ == "__main__":
+    # Start Flask with Waitress (production safe)
+    threading.Thread(
+        target=lambda: serve(app, host="127.0.0.1", port=5003)
+    ).start()
+
+    # Start Smart Report Mailer in background (if available)
+    if smart_report_mailer:
+        def start_smart_report():
+            try:
+                smart_report_mailer.main()
+            except Exception as e:
+                print("smart_report_mailer failed:", e)
+        threading.Thread(target=start_smart_report, daemon=True).start()
+
+    # Create Webview Window
+    webview.create_window("Sagar Nilgiri Products - MMS", "http://127.0.0.1:5003/login", width=1200, height=800)
+    webview.start()

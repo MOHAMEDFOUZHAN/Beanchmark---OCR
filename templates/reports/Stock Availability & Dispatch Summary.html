@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Stock Availability & Dispatch Summary</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #E6EDF6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .site-header {
+      background: #0C294B;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    nav {
+      background: #093267;
+      display: flex;
+      justify-content: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+    }
+
+    nav a:hover {
+      background: #0C294B;
+    }
+
+    nav a.active {
+      background: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      flex: 1 0 auto;
+    }
+
+
+    /* Top Bar */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      justify-content: space-between;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* Updated Input Styles */
+    input[type="text"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 200px;
+    }
+
+    button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+    }
+
+    .btn-filter {
+      background: #0C294B;
+    }
+
+    .btn-print {
+      background: #0C294B;
+    }
+
+    /* Summary Cards */
+    .summary-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: #0C294B;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      width: 220px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding-bottom: 5px;
+    }
+
+    .card-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .val {
+      font-weight: bold;
+      color: #FFD700;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    thead {
+      background: #0C294B;
+      color: white;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border: 1px solid #dee2e6;
+      text-align: center;
+    }
+
+    tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+
+    /* Status Colors */
+    .status-full {
+      color: green;
+      font-weight: bold;
+    }
+
+    .status-partial {
+      color: orange;
+      font-weight: bold;
+    }
+
+    .status-empty {
+      color: red;
+      font-weight: bold;
+    }
+
+    .footer-note {
+      text-align: right;
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    /* Print Header Styles */
+    .print-only-header {
+      display: none;
+    }
+
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 8mm;
+      }
+
+      .print-only-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 20px;
+        font-family: Arial, sans-serif;
+        color: black;
+        border-bottom: 2px solid black;
+        padding-bottom: 10px;
+      }
+
+      .print-line-1 {
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .print-line-2 {
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .print-line-3 {
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 5px;
+      }
+
+      .print-line-4 {
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      /* Hide screen UI */
+      .site-header,
+      nav,
+      .filter-bar,
+      .summary-container,
+      .footer-note,
+      button,
+      a[href="/logout"],
+      .no-print {
+        display: none !important;
+      }
+
+
+      .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+      }
+
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: 1px solid black !important;
+      }
+
+      th,
+      td {
+        border: 1px solid black !important;
+        padding: 8px !important;
+        font-size: 12px !important;
+      }
+
+      th {
+        background-color: #f2f2f2 !important;
+        color: black !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Stock Availability & Dispatch Summary</h1>
+    </div>
+    <a href="/logout" style="color:white;text-decoration:none;">Logout</a>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="print-only-header">
+    <div class="print-line-1">MATERIAL MANAGEMENT</div>
+    <div class="print-line-2">BENCHMARK FACTORY</div>
+    <div class="print-line-3">
+      <span class="report-name">Stock Availability & Dispatch Summary</span>
+      {% if selected_category %}
+      <span class="category"> - {{ selected_category }}</span>
+      {% endif %}
+    </div>
+    <div class="print-line-4">
+      {% if from_date or to_date %}
+      Date: From {{ from_date | format_date or 'N/A' }} To {{ to_date | format_date or 'N/A' }}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="container">
+
+    <form class="filter-bar" action="/reports/storage" method="GET">
+      <div class="filter-group">
+        <input type="text" name="search_batch" placeholder="Search Batch No..." value="{{ search_batch or '' }}">
+
+        <label style="font-weight:bold; color:#0C294B; margin-left:10px;">From:</label>
+        <input type="date" name="from_date" value="{{ from_date }}"
+          style="padding:8px; border:1px solid #ccc; border-radius:4px;">
+
+        <label style="font-weight:bold; color:#0C294B;">To:</label>
+        <input type="date" name="to_date" value="{{ to_date }}"
+          style="padding:8px; border:1px solid #ccc; border-radius:4px;">
+
+        <button type="submit" class="btn-filter">Filter Report</button>
+
+        {% if search_batch or from_date or to_date %}
+        <button type="button" class="btn-filter" style="background:#6c757d;"
+          onclick="window.location.href='/reports/storage'">Clear</button>
+        {% endif %}
+      </div>
+      <button type="button" class="btn-print" onclick="window.print()">Print Report</button>
+    </form>
+
+    <div class="summary-container">
+      {% for uom, totals in summary.items() %}
+      <div class="card">
+        <h3>{{ uom|capitalize }}</h3>
+        <div class="card-row"><span>Dispatched (Today):</span> <span class="val">{{ totals.dispatched_today }}</span>
+        </div>
+        <div class="card-row"><span>Current Stock:</span> <span class="val">{{ totals.available }}</span></div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Batch No</th>
+          <th>Description</th>
+          <th>Stock Out</th>
+          <th>Stock In Hand</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for batch in batches %}
+        <tr>
+          <td>{{ batch.report_date }}</td>
+
+          <td>{{ batch.batch_no }}</td>
+          <td>{{ batch.description }}</td>
+
+          <td style="color:#d9534f; font-weight:bold;">{{ batch.dispatched_display }}</td>
+          <td style="color:#28a745; font-weight:bold;">{{ batch.avail_qty_display }}</td>
+          <td class="{{ batch.status_class }}">{{ batch.status }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6">No stock records found.</td>
+        </tr> {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('nav a');
+      let bestMatch = null;
+      let maxLength = -1;
+
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath === href) {
+          bestMatch = link;
+          maxLength = href.length;
+        } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+          bestMatch = link;
+          maxLength = href.length;
+        }
+      });
+
+      if (bestMatch) {
+        bestMatch.classList.add('active');
+      }
+    });
+  </script>
+  <footer>© 2025 Material Management System | Developed by Maple Pro</footer>
+</body>
+
+</html>

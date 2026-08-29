@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Inventory System</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #E6EDF6;
+    }
+
+    /* Professional Header */
+    .site-header {
+      background-color: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      object-fit: cover;
+      background-color: #fff;
+    }
+
+    .logo-container h1 {
+      font-size: 22px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      color: white;
+      margin: 0;
+    }
+
+    .site-header a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    /* Navigation Bar */
+    nav {
+      background-color: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+      display: inline-block;
+      font-weight: 500;
+    }
+
+    nav a:hover {
+      background-color: #0C294B;
+    }
+
+    nav a.active {
+      background-color: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card h3 {
+      color: #0C294B;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+    }
+
+    .card p {
+      color: #333;
+      font-size: 2em;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .chart-section-title {
+      color: #0C294B;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .chart-container {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .chart-wrapper {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-wrapper h3 {
+      text-align: center;
+      color: #0C294B;
+      margin-top: 0;
+    }
+
+    footer {
+      margin-top: 40px;
+      background-color: #0C294B;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .chart-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .logo-container h1 {
+        font-size: 18px;
+      }
+
+      nav {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Inventory Dashboard</h1>
+    </div>
+    <a href="/logout">Logout</a>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/materials/master">Materials Master</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="container">
+    <div style="margin-bottom: 30px; text-align: right;">
+      <button id="reportBtn" onclick="sendDailyReport()"
+        style="background-color:#0C294B; color:white; border:none; padding:12px 20px; font-size:16px; border-radius:8px; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.2);">
+        Send Daily Report
+      </button>
+    </div>
+
+    <div class="card-section">
+      <div class="cards">
+        <div class="card">
+          <h3>Total Materials</h3>
+          <p>{{ total_materials }}</p>
+        </div>
+        <div class="card">
+          <h3>Reorder Level</h3>
+          <p>{{ reorder_items }}</p>
+        </div>
+        <div class="card">
+          <h3>Expiring Soon</h3>
+          <p>{{ expiring_items }}</p>
+          <span style="font-size: 12px; color: #666;">(Next 30 Days)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <h2 class="chart-section-title">Dashboard Visuals</h2>
+      <div class="chart-container">
+        <div class="chart-wrapper">
+          <h3>Material by Category</h3>
+          <canvas id="categoryPieChart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+          <h3>Top 5 Material Items</h3>
+          <canvas id="topItemsBarChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2025 Material Management System | Maple Pro</p>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('nav a');
+      let bestMatch = null;
+      let maxLength = -1;
+
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath === href) {
+          bestMatch = link;
+          maxLength = href.length;
+        } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+          bestMatch = link;
+          maxLength = href.length;
+        }
+      });
+
+      if (bestMatch) {
+        bestMatch.classList.add('active');
+      }
+    });
+
+    // --- Chart Logic ---
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('/api/dashboard_charts')
+        .then(response => response.json())
+        .then(data => {
+          if (data.stock_by_category && data.stock_by_category.length > 0) {
+            renderPieChart(data.stock_by_category);
+          } else {
+            const pieCtx = document.getElementById('categoryPieChart').getContext('2d');
+            drawEmptyChart(pieCtx, "No category data.");
+          }
+
+          if (data.top_5_items && data.top_5_items.length > 0) {
+            renderBarChart(data.top_5_items);
+          } else {
+            const barCtx = document.getElementById('topItemsBarChart').getContext('2d');
+            drawEmptyChart(barCtx, "No item data.");
+          }
+        })
+        .catch(error => console.error('Error fetching chart data:', error));
+    });
+
+    function renderPieChart(categoryData) {
+      const ctx = document.getElementById('categoryPieChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: categoryData.map(item => item.category),
+          datasets: [{
+            data: categoryData.map(item => item.total_stock),
+            backgroundColor: ['#0C294B', '#17497a', '#2a6fa8', '#4c9bcf', '#7bc7f7']
+          }]
+        }
+      });
+    }
+
+    function renderBarChart(topItemsData) {
+      const ctx = document.getElementById('topItemsBarChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: topItemsData.map(item => item.description),
+          datasets: [{
+            label: 'Stock',
+            data: topItemsData.map(item => item.quantity),
+            backgroundColor: '#0C294B'
+          }]
+        },
+        options: { indexAxis: 'y' }
+      });
+    }
+
+    function drawEmptyChart(ctx, message) {
+      ctx.font = "16px Arial";
+      ctx.fillStyle = "#666";
+      ctx.textAlign = "center";
+      ctx.fillText(message, ctx.canvas.width / 2, ctx.canvas.height / 2);
+    }
+
+    // --- Manual Report Logic ---
+    function sendDailyReport() {
+      const btn = document.getElementById('reportBtn');
+      if (!confirm("Send daily inventory report now?")) return;
+
+      btn.disabled = true;
+      btn.innerText = "Sending...";
+
+      fetch('/reports/send_daily_mail')
+        .then(res => res.text())
+        .then(msg => {
+          alert(msg);
+          btn.disabled = false;
+          btn.innerText = "Send Daily Report";
+        })
+        .catch(err => {
+          alert("Failed to send report");
+          console.error(err);
+          btn.disabled = false;
+          btn.innerText = "Send Daily Report";
+        });
+    }
+  </script>
+</body>
+
+</html>

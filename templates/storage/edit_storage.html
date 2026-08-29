@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Batch</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #E6EDF6;
+    }
+
+    .site-header {
+      background-color: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .logo-container h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+
+    .site-header a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    nav {
+      background-color: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+    }
+
+    nav a:hover {
+      background-color: #0C294B;
+    }
+
+    nav a.active {
+      background-color: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #0C294B;
+      margin-bottom: 10px;
+    }
+
+    /* The Grid Layout - Same as Add Page */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    input[readonly] {
+      background: #e9ecef;
+    }
+
+    .actions {
+      margin-top: 25px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .save {
+      background: #0C294B;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    .back {
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    @media (max-width:800px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .input-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .unit-display {
+      font-weight: bold;
+      color: #0C294B;
+      min-width: 40px;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Edit Batch</h1>
+    </div>
+    <a href="/logout">Logout</a>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="container">
+    <form method="POST" action="{{ url_for('edit_storage_data', batch_id=batch.id) }}">
+      <h2>Batch Details</h2>
+
+      <div class="form-grid">
+
+        <div>
+          <label>Batch No (auto)</label>
+          <input type="text" name="batch_no" id="batch_no" value="{{ batch.batch_no }}" readonly required>
+        </div>
+
+        <div>
+          <label>Date</label>
+          <input type="date" name="received_date" id="received_date" value="{{ batch.received_date }}" required>
+        </div>
+
+        <div>
+          <label>Description</label>
+          <input type="text" name="description" id="description" value="{{ batch.description }}" required>
+        </div>
+
+        <div>
+          <label>Department (Optional)</label>
+          <input type="text" name="department" value="{{ batch.department or '' }}" placeholder="Type department...">
+        </div>
+
+        <div>
+          <label>Unit of Measure</label>
+          <select name="uom" id="uom" required onchange="updateUnitLabels()">
+            <option value="">--Select Unit--</option>
+            <option value="kg" {% if batch.uom=='kg' %}selected{% endif %}>Kg</option>
+            <option value="litre" {% if batch.uom=='litre' %}selected{% endif %}>Litre</option>
+            <option value="pcs" {% if batch.uom=='pcs' %}selected{% endif %}>Pieces</option>
+            <option value="box" {% if batch.uom=='box' %}selected{% endif %}>Box</option>
+            <option value="meter" {% if batch.uom=='meter' %}selected{% endif %}>Meter</option>
+            <option value="can" {% if batch.uom=='can' %}selected{% endif %}>Can</option>
+            <option value="tin" {% if batch.uom=='tin' %}selected{% endif %}>Tin</option>
+            <option value="roll" {% if batch.uom=='roll' %}selected{% endif %}>Roll</option>
+            <option value="sheet" {% if batch.uom=='sheet' %}selected{% endif %}>Sheet</option>
+            <option value="bags" {% if batch.uom=='bags' %}selected{% endif %}>Bags</option>
+            <option value="carton" {% if batch.uom=='carton' %}selected{% endif %}>Carton</option>
+            <option value="bottle" {% if batch.uom=='bottle' %}selected{% endif %}>Bottle</option>
+            <option value="packet" {% if batch.uom=='packet' %}selected{% endif %}>Packet</option>
+            <option value="bundle" {% if batch.uom=='bundle' %}selected{% endif %}>Bundle</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Received Quantity</label>
+          <div class="input-group">
+            <input type="number" step="0.001" name="quantity" id="quantity" value="{{ batch.received_quantity }}"
+              required>
+            <span id="unit_label" class="unit-display">-</span>
+          </div>
+        </div>
+
+      </div>
+      <div class="actions">
+        <button type="button" class="back" onclick="window.location.href='/storage'">Back</button>
+        <button type="submit" class="save">Save Changes</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // 1. Date to Batch Logic
+    function dayOfYearFromDateObj(d) {
+      const start = new Date(d.getFullYear(), 0, 0);
+      const diff = d - start;
+      const oneDay = 1000 * 60 * 60 * 24;
+      return Math.floor(diff / oneDay);
+    }
+
+    function computeDayOfYearFromInput(dateStr) {
+      if (!dateStr) return "";
+      const parts = dateStr.split("-");
+      if (parts.length !== 3) return "";
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      if (isNaN(d)) return "";
+      return String(dayOfYearFromDateObj(d));
+    }
+
+    function updateBatchFromDate() {
+      const dateInput = document.getElementById('received_date');
+      const batchInput = document.getElementById('batch_no');
+      let dateVal = dateInput.value;
+      if (!dateVal) {
+        const today = new Date();
+        dateVal = today.toISOString().slice(0, 10);
+        dateInput.value = dateVal;
+      }
+      const dayNum = computeDayOfYearFromInput(dateVal);
+      batchInput.value = dayNum || "";
+    }
+
+    // 2. Simple Unit Label Logic
+    function updateUnitLabels() {
+      const uomSelect = document.getElementById('uom');
+      const unitLabel = document.getElementById('unit_label');
+      const val = uomSelect.value;
+      unitLabel.textContent = val ? val : "-";
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const dateEl = document.getElementById('received_date');
+      if (!dateEl.value) {
+        dateEl.value = new Date().toISOString().slice(0, 10);
+      }
+      updateBatchFromDate();
+      updateUnitLabels();
+
+      dateEl.addEventListener('change', updateBatchFromDate);
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('nav a');
+      let bestMatch = null;
+      let maxLength = -1;
+
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath === href) {
+          bestMatch = link;
+          maxLength = href.length;
+        } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+          bestMatch = link;
+          maxLength = href.length;
+        }
+      });
+
+      if (bestMatch) {
+        bestMatch.classList.add('active');
+      }
+    });
+  </script>
+</body>
+
+</html>

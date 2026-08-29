@@ -1,0 +1,39 @@
+
+====================
+Checking: d:\Beanchmark\inventory - BeanchMark-MMS.db
+====================
+Tables found: 
+
+Checking for missing material codes in materials table:
+Table invoice_items does not exist.
+Table batches does not exist.
+Table dispatches does not exist.
+Table transfers does not exist.
+
+Checking for '0' or empty critical values:
+
+====================
+Checking: C:\ProgramData\BeanchMark-MMS\inventory - BeanchMark-MMS.db
+====================
+Tables found: materials, vendors, invoices, invoice_items, dispatches, dispatch_batches, transfers, batches
+Table materials: 147 rows
+Table vendors: 0 rows
+Table invoices: 8 rows
+Table invoice_items: 227 rows
+Table dispatches: 1 rows
+Table dispatch_batches: 1 rows
+Table transfers: 98 rows
+Table batches: 4 rows
+
+Checking for missing material codes in materials table:
+Table invoice_items field material has codes not in materials: ['900', '802', '901', '902', '903', '904', '905', '906', '907', '908']
+Table batches field material_code has codes not in materials: ['STORAGE-ITEM']
+Table dispatches field material_code has codes not in materials: ['STORAGE-ITEM']
+Table transfers field code has codes not in materials: ['903', '900', '902']
+
+Checking for '0' or empty critical values:
+materials.material_code: All good.
+WARNING: invoices.invoice_no has 1 zeros/empty values.
+batches.batch_no: All good.
+
+Finished.

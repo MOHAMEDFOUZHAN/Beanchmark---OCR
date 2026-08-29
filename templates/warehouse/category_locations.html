@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Warehouse Category Management</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: #E6EDF6;
+        }
+
+        .site-header {
+            background: #0C294B;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav {
+            background: #093267;
+            display: flex;
+            justify-content: center;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 12px 18px;
+        }
+
+        nav a:hover {
+            background: #0C294B;
+        }
+
+        nav a.active {
+            background: #0C294B;
+            font-weight: bold;
+            border-bottom: 3px solid white;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #0C294B;
+            margin-top: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #0C294B;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .btn-update {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-update:hover {
+            background: #219150;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo" height="40">
+            <h1>Benchmark MMS</h1>
+        </div>
+        <a href="/logout" style="color:white; text-decoration:none; font-weight:bold;">Logout</a>
+    </header>
+
+    <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/invoices">Invoices</a>
+            <a href="/transfers">Transfers</a>
+            <a href="/materials">Materials</a>
+            <a href="/storage">Storage</a>
+            <a href="/vendors">Vendors</a>
+            <a href="/dispatch">Dispatch</a>
+            <a href="/warehouse/categories">Shelf Mapping</a>
+            <a href="/reports/utilization">MUR</a>
+            <a href="/reports">Reports</a>
+        </nav>
+
+    <div class="container">
+        <h2>Shelf & Container Management</h2>
+        <p class="hint">Assign a physical storage location (Shelf Number, Container Name, or Bin ID) to each material
+            category.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Category Name</th>
+                    <th>Storage Location (Shelf/Container)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in categories %}
+                <tr>
+                    <form method="POST">
+                        <input type="hidden" name="category" value="{{ cat }}">
+                        <td style="font-weight:bold; color:#0C294B;">{{ cat }}</td>
+                        <td>
+                            <input type="text" name="location" placeholder="e.g. Shelf A-01, Cool Box 4"
+                                value="{{ location_map.get(cat, '') }}">
+                        </td>
+                        <td>
+                            <button type="submit" class="btn-update">Save</button>
+                        </td>
+                    </form>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('nav a');
+            let bestMatch = null;
+            let maxLength = -1;
+
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (currentPath === href) {
+                    bestMatch = link;
+                    maxLength = href.length;
+                } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+                    bestMatch = link;
+                    maxLength = href.length;
+                }
+            });
+
+            if (bestMatch) {
+                bestMatch.classList.add('active');
+            }
+        });
+    </script>
+</body>
+
+</html>

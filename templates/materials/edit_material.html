@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Material</title>
+  <style>
+    /* --- UPDATED --- */
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #E6EDF6;
+      line-height: 1.5;
+    }
+
+    *,
+    *:before,
+    *:after {
+      box-sizing: border-box;
+    }
+
+    /* --- END UPDATED --- */
+
+    .site-header {
+      background-color: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      object-fit: cover;
+      background-color: #fff;
+    }
+
+    .logo-container h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+
+    .site-header a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    nav {
+      background-color: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+      display: inline-block;
+    }
+
+    nav a:hover {
+      background-color: #0C294B;
+    }
+
+    nav a.active {
+      background-color: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #0C294B;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    /* --- UPDATED INPUT --- */
+    .form-group input {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 100%;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: #0C294B;
+      box-shadow: 0 0 0 3px rgba(12, 41, 75, 0.1);
+      outline: none;
+    }
+
+    .form-group input[readonly] {
+      background-color: #e9ecef;
+      color: #555;
+      border-color: #ddd;
+    }
+
+    /* --- END UPDATED INPUT --- */
+
+    /* --- UPDATED ACTIONS/BUTTONS --- */
+    .actions {
+      margin-top: 25px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 25px;
+    }
+
+    .actions button,
+    .actions a {
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-block;
+      line-height: 1.5;
+      /* Align text vertically */
+      transition: opacity 0.2s;
+    }
+
+    .save {
+      background-color: #0C294B;
+      color: white;
+    }
+
+    .back {
+      background-color: #6c757d;
+      color: white;
+      text-align: center;
+    }
+
+    .actions button:hover,
+    .actions a:hover {
+      opacity: 0.85;
+    }
+
+    /* --- END UPDATED ACTIONS --- */
+    .site-header a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Edit Material</h1>
+    </div>
+    <a href="/logout">Logout</a>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="container">
+    <h2>Edit Material Details</h2>
+    <form method="POST">
+      <div class="form-group">
+        <label>Material Code</label>
+        <input type="text" value="{{ material.material_code }}" readonly>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Material Name (Description)</label>
+        <input type="text" id="description" name="description" value="{{ material.description }}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="category">Category</label>
+        <input type="text" id="category" name="category" value="{{ material.category }}">
+      </div>
+
+      <div class="form-group">
+        <label for="reorder_level">Reorder Level</label>
+        <input type="number" id="reorder_level" name="reorder_level" value="{{ material.reorder_level }}">
+      </div>
+
+      <div class="actions">
+        <a href="/materials" class="back">Back</a>
+        <button type="submit" class="save">Update Material</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('nav a');
+      let bestMatch = null;
+      let maxLength = -1;
+
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath === href) {
+          bestMatch = link;
+          maxLength = href.length;
+        } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+          bestMatch = link;
+          maxLength = href.length;
+        }
+      });
+
+      if (bestMatch) {
+        bestMatch.classList.add('active');
+      }
+    });
+  </script>
+</body>
+
+</html>

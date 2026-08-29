@@ -1,0 +1,71 @@
+import sqlite3
+import os
+
+DATABASE = os.path.join(os.environ["PROGRAMDATA"], "BeanchMark-MMS", "inventory - BeanchMark-MMS.db")
+
+def sync_invoices_to_batches_v2():
+    if not os.path.exists(DATABASE):
+        print("DB not found")
+        return
+    
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    
+    # First, make sure the column exists (already done by MMS.py but let's be safe)
+    try:
+        cur.execute("ALTER TABLE batches ADD COLUMN invoice_id INTEGER")
+    except:
+        pass
+
+    print("--- Syncing Invoices to Batches (V2) ---")
+    
+    # Get all invoice items
+    cur.execute("""
+        SELECT ii.*, i.date as invoice_date, m.description as material_name
+        FROM invoice_items ii
+        JOIN invoices i ON ii.invoice_id = i.id
+        LEFT JOIN materials m ON ii.material = m.material_code
+    """)
+    items = cur.fetchall()
+    
+    for item in items:
+        # Check if already synced using invoice_id AND material_code
+        cur.execute("""
+            SELECT id FROM batches 
+            WHERE invoice_id = ? AND material_code = ? AND batch_no = ?
+        """, (item['invoice_id'], item['material'], item['batch_no']))
+        
+        if not cur.fetchone():
+            # Try to find if it was synced before without invoice_id
+            cur.execute("""
+                SELECT id FROM batches 
+                WHERE batch_no = ? AND material_code = ? AND received_quantity = ? AND invoice_id IS NULL
+            """, (item['batch_no'], item['material'], item['quantity']))
+            
+            existing = cur.fetchone()
+            if existing:
+                print(f"Updating existing batch {existing['id']} with invoice_id {item['invoice_id']}")
+                cur.execute("UPDATE batches SET invoice_id = ? WHERE id = ?", (item['invoice_id'], existing['id']))
+            else:
+                print(f"Inserting new batch for {item['material']} - {item['material_name']} (Qty: {item['quantity']})")
+                cur.execute("""
+                    INSERT INTO batches (batch_no, material_code, description, received_quantity, available_quantity, uom, received_date, created_at, invoice_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    item['batch_no'], 
+                    item['material'], 
+                    item['material_name'] or item['material'], 
+                    item['quantity'], 
+                    item['quantity'], 
+                    item['unit'], 
+                    item['invoice_date'], 
+                    item['invoice_date'] + " 00:00:00",
+                    item['invoice_id']
+                ))
+            
+    conn.commit()
+    print("Sync completed.")
+    conn.close()
+
+sync_invoices_to_batches_v2()

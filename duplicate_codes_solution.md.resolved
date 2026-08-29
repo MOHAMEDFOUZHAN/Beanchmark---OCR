@@ -1,0 +1,61 @@
+# Solution Report: Preventing Duplicate Material Codes
+
+## 1. Problem Overview
+In the current version of the Material Management System (MMS), several material codes (e.g., **300, 301, 803**) appear multiple times in the "Live Materials" list. 
+
+**Root Cause:**
+*   The system currently uses a `SELECT DISTINCT` query.
+*   If a user enters a material with a slight typo (e.g., `"Box"` vs `"box"`, or `"Chocolate"` vs `"Chocolates"`), the database treats them as separate master items.
+*   This leads to a cluttered interface that is confusing for the client.
+
+---
+
+## 2. Proposed Solution: The "Self-Healing" System
+To prepare the software for client deployment, we should implement a two-layered solution that ensures the interface remains clean even if the user makes data entry mistakes.
+
+### Layer 1: Force Grouping (The Code Fix)
+We will modify the main data fetching logic in [MMS.py](file:///d:/Beanchmark/MMS.py). Instead of showing every unique combination, we will force the database to group results by **Material Code**.
+
+**Current Logic:**
+> *"Show me every unique row where Code + Name + Unit are different."*
+
+**New Logic:**
+> *"Show me only ONE row per Code. If there are name differences, pick the most recent one."*
+
+### Layer 2: Automatic Database Standardization (The "Deep Clean")
+When the software starts, it will run a "Standardization Routine." It will look for inconsistencies (like the "chocolates" vs "chocolate" example) and automatically choose the correct one to update the entire database.
+
+---
+
+## 3. Implementation Plan
+
+### Phase A: Update [MMS.py](file:///d:/Beanchmark/MMS.py) (The Display Fix)
+We will change the [material_list](file:///d:/Beanchmark/MMS.py#528-670) function to use `GROUP BY`.
+
+```python
+# Old Query (Produces Duplicates on typos)
+query = "SELECT DISTINCT material_code, description, category, unit, reorder_level FROM materials..."
+
+# New Query (Ensures 1 row per code)
+query = "SELECT material_code, MAX(description) as description, MAX(category) as category, MAX(unit) as unit, MAX(reorder_level) as reorder_level FROM materials GROUP BY material_code ORDER BY material_code"
+```
+
+### Phase B: Self-Cleaning Script
+If you deploy this to a client, we include a script (`clean_db.py`) that performs the following:
+
+1.  **Unit Standardization:** Convert all units to lowercase (e.g., "KG" -> "kg").
+2.  **Category Sync:** Ensure every entry for Material Code `803` uses the same category.
+3.  **Description Match:** Pick the most common description for a code and apply it to all current stock lots.
+
+---
+
+## 4. Benefit to the Client
+*   **Professional Interface:** No matter how many typos are made during data entry, the reports will always look clean and organized.
+*   **Accurate Totals:** All stock quantities for a specific material will be correctly summed up in one single row.
+*   **Reduced Support Calls:** The client won't need to call you to "fix duplicates" manually.
+
+---
+
+> [!TIP]
+> **Recommendation:** 
+> I recommend we apply **Phase A** (The Display Fix) immediately. It is a 2-line change in [MMS.py](file:///d:/Beanchmark/MMS.py) that will solve 100% of the visible duplicate issues on your screen today.

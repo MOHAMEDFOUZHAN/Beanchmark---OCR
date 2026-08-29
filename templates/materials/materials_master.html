@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Materials Master</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #E6EDF6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .site-header {
+            background-color: #0C294B;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-container img {
+            height: 45px;
+            width: 45px;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+
+        .site-header a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        nav {
+            background-color: #093267;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 12px 18px;
+        }
+
+        nav a:hover {
+            background-color: #0C294B;
+        }
+
+        nav a.active {
+            background-color: #0C294B;
+            font-weight: bold;
+            border-bottom: 3px solid white;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #0C294B;
+            margin-top: 0;
+            border-bottom: 2px solid #E6EDF6;
+            padding-bottom: 12px;
+            font-size: 24px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .filter-bar input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 300px;
+            font-size: 14px;
+        }
+
+        .filter-bar button {
+            padding: 10px 20px;
+            background: #0C294B;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .filter-bar button:hover {
+            background: #093267;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 14px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+        }
+
+        th {
+            background: #0C294B;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fcfcfc;
+        }
+
+        tr:hover {
+            background-color: #f1f4f8;
+        }
+
+        .update-form {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: white;
+            min-width: 120px;
+            font-size: 14px;
+        }
+
+        .update-btn {
+            padding: 8px 12px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .update-btn:hover {
+            background: #219150;
+            transform: translateY(-1px);
+        }
+
+        .update-btn:active {
+            transform: translateY(0);
+        }
+
+        strong {
+            color: #0C294B;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #0C294B;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+            <h1>Materials Master</h1>
+        </div>
+        <a href="/logout">Logout</a>
+    </header>
+    <nav>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/invoices">Invoices</a>
+        <a href="/transfers">Transfers</a>
+        <a href="/materials">Materials</a>
+        <a href="/materials/master">Materials Master</a>
+        <a href="/storage">Storage</a>
+        <a href="/vendors">Vendors</a>
+        <a href="/dispatch">Dispatch</a>
+        <a href="/warehouse/categories">Shelf Mapping</a>
+        <a href="/reports">Reports</a>
+    </nav>
+    <div class="container">
+        <a href="/materials" class="back-link">← Back to Live Materials</a>
+        <h2>Material Code & Master Data Management</h2>
+        <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Updating the unit here will automatically
+            synchronize it across all Invoices, Batches (Lots), Transfers, and Dispatches for that Material Code.</p>
+
+        <div class="filter-bar">
+            <form action="/materials/master" method="GET" style="display:flex; gap:10px; width: 100%;">
+                <input type="text" name="search_code" placeholder="Search by Code or Description..."
+                    value="{{ search_code }}">
+                <button type="submit">Search Material</button>
+                {% if search_code %}
+                <a href="/materials/master"
+                    style="text-decoration:none; color:#666; align-self:center; font-weight: bold; font-size: 14px;">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 150px;">Code</th>
+                    <th>Description</th>
+                    <th style="width: 280px;">Unit Management</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mat in materials %}
+                <tr>
+                    <td><strong>{{ mat.material_code }}</strong></td>
+                    <td>{{ mat.description }}</td>
+                    <td>
+                        <form action="/materials/master/update" method="POST" class="update-form">
+                            <input type="hidden" name="code" value="{{ mat.material_code }}">
+                            <select name="unit">
+                                <option value="kg" {% if mat.unit=='kg' %}selected{% endif %}>Kg</option>
+                                <option value="litre" {% if mat.unit=='litre' %}selected{% endif %}>Litre</option>
+                                <option value="pcs" {% if mat.unit=='pcs' %}selected{% endif %}>Pieces</option>
+                                <option value="box" {% if mat.unit=='box' %}selected{% endif %}>Box</option>
+                                <option value="meter" {% if mat.unit=='meter' %}selected{% endif %}>Meter</option>
+                                <option value="can" {% if mat.unit=='can' %}selected{% endif %}>Can</option>
+                                <option value="tin" {% if mat.unit=='tin' %}selected{% endif %}>Tin</option>
+                                <option value="roll" {% if mat.unit=='roll' %}selected{% endif %}>Roll</option>
+                                <option value="sheet" {% if mat.unit=='sheet' %}selected{% endif %}>Sheet</option>
+                                <option value="bags" {% if mat.unit=='bags' %}selected{% endif %}>Bags</option>
+                                <option value="carton" {% if mat.unit=='carton' %}selected{% endif %}>Carton</option>
+                                <option value="bottle" {% if mat.unit=='bottle' %}selected{% endif %}>Bottle</option>
+                                <option value="packet" {% if mat.unit=='packet' %}selected{% endif %}>Packet</option>
+                                <option value="bundle" {% if mat.unit=='bundle' %}selected{% endif %}>Bundle</option>
+                            </select>
+                            <button type="submit" class="update-btn"
+                                onclick="return confirm('WARNING: This will update the unit for {{ mat.material_code }} in ALL existing records (Invoices, Batches, etc.). Proceed?')">Update
+                                Unit</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #666; padding: 30px;">No materials found. Try a
+                        different search term.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

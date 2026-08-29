@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Add Dispatch</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #E6EDF6;
+    }
+
+    .site-header {
+      background: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    nav {
+      background: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+    }
+
+    nav a:hover {
+      background: #0C294B;
+    }
+
+    nav a.active {
+      background: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #0C294B;
+      margin-bottom: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    input[readonly] {
+      background: #e9ecef;
+      cursor: not-allowed;
+    }
+
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .save {
+      background: #0C294B;
+      color: white;
+    }
+
+    .back {
+      background: #6c757d;
+      color: white;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #d9534f;
+      margin-top: 2px;
+      display: none;
+    }
+
+    /* Single Input Container Style */
+    .input-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .unit-display {
+      font-weight: bold;
+      color: #0C294B;
+      min-width: 40px;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Add Dispatch</h1>
+    </div>
+    <a href="/logout" style="color:white;text-decoration:none;">Logout</a>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="container">
+    <form method="POST">
+      <h2>Dispatch Details</h2>
+      <div class="form-grid">
+        <div>
+          <label>Date</label>
+          <input type="date" name="date" id="date" required>
+        </div>
+
+        <div>
+          <label>Description (Product Name)</label>
+          <input type="text" name="material_name" id="material_name" list="product_list"
+            placeholder="Type to search (e.g. 'co')" autocomplete="off" required oninput="fetchSuggestions()">
+          <datalist id="product_list"></datalist>
+        </div>
+
+        <div>
+          <label>Batch Number (Oldest Available)</label>
+          <input type="text" name="batch_no" id="batch_no" placeholder="Auto-fills oldest batch" readonly required>
+        </div>
+
+        <div>
+          <label>Base Unit</label>
+          <select name="units" id="units" onchange="updateUnitLabels(this.value)" required>
+            <option value="">--Select Unit--</option>
+            <option value="kg">Kilogram (kg)</option>
+            <option value="litre">Litre (L)</option>
+            <option value="pcs">Pieces</option>
+            <option value="box">Box</option>
+            <option value="meter">Meter</option>
+            <option value="can">Can</option>
+            <option value="tin">Tin</option>
+            <option value="roll">Roll</option>
+            <option value="sheet">Sheet</option>
+            <option value="bags">Bags</option>
+            <option value="carton">Carton</option>
+            <option value="bottle">Bottle</option>
+            <option value="packet">Packet</option>
+            <option value="bundle">Bundle</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Quantity Dispatch</label>
+          <div class="input-group">
+            <input type="number" step="0.001" name="quantity" id="quantity" placeholder="e.g. 5.5" required
+              oninput="validateQuantity()">
+            <span id="unitLabel" class="unit-display">-</span>
+          </div>
+          <div id="qty_warning" class="hint"></div>
+        </div>
+
+        <div><label>Department</label><input type="text" name="department" placeholder="e.g. Packing Unit"></div>
+        <div><label>Location</label><input type="text" name="location" placeholder="e.g. Warehouse A"></div>
+
+        <input type="hidden" id="max_avail_qty" value="0">
+      </div>
+
+      <div class="actions">
+        <button type="button" class="back" onclick="window.location.href='/dispatch'">Back</button>
+        <button type="submit" class="save" id="submit_btn">Save Dispatch</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // 1. Set Date
+    const dateInput = document.getElementById("date");
+    if (!dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
+
+    // 2. Autocomplete Logic
+    async function fetchSuggestions() {
+      const input = document.getElementById('material_name');
+      const list = document.getElementById('product_list');
+      const term = input.value;
+
+      if (term.length < 1) return;
+
+      const res = await fetch(`/api/storage/search_description?term=${encodeURIComponent(term)}`);
+      const suggestions = await res.json();
+
+      list.innerHTML = '';
+      suggestions.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item;
+        list.appendChild(option);
+      });
+
+      checkForSelection(term, suggestions);
+    }
+
+    // 3. FIFO Logic
+    function checkForSelection(term, suggestions) {
+      if (suggestions.includes(term)) {
+        fetchOldestBatch(term);
+      }
+    }
+
+    document.getElementById('material_name').addEventListener('change', function () {
+      fetchOldestBatch(this.value);
+    });
+
+    async function fetchOldestBatch(description) {
+      if (!description) return;
+
+      try {
+        const res = await fetch(`/api/storage/get_oldest_batch?description=${encodeURIComponent(description)}`);
+        const data = await res.json();
+
+        if (data.error) {
+          document.getElementById('batch_no').value = "No Stock";
+          document.getElementById('max_avail_qty').value = 0;
+        } else {
+          document.getElementById('batch_no').value = data.batch_no;
+          document.getElementById('max_avail_qty').value = data.available_quantity;
+
+          if (data.uom) {
+            document.getElementById('units').value = data.uom;
+            updateUnitLabels(data.uom);
+          }
+          document.getElementById('qty_warning').style.display = 'none';
+        }
+      } catch (e) {
+        console.error("Error fetching batch:", e);
+      }
+    }
+
+    // 4. Quantity Validation Logic (SIMPLIFIED FOR SINGLE BOX)
+    function validateQuantity() {
+      const maxQty = parseFloat(document.getElementById('max_avail_qty').value) || 0;
+      // Just read the single box value
+      const currentQty = parseFloat(document.getElementById('quantity').value) || 0;
+      const unit = document.getElementById('units').value;
+      const warning = document.getElementById('qty_warning');
+      const submitBtn = document.getElementById('submit_btn');
+
+      if (currentQty > maxQty) {
+        warning.textContent = `Warning: This batch only has ${maxQty} ${unit}. Please finish this batch first before entering ${currentQty} ${unit}.`;
+        warning.style.display = 'block';
+        submitBtn.disabled = true;
+        submitBtn.style.background = "#ccc";
+      } else {
+        warning.style.display = 'none';
+        submitBtn.disabled = false;
+        submitBtn.style.background = "#0C294B";
+      }
+    }
+
+    // 5. Unit Display Logic
+    function updateUnitLabels(unit) {
+      const label = document.getElementById("unitLabel");
+      label.textContent = unit ? unit : "-";
+      validateQuantity();
+    }
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('nav a');
+      let bestMatch = null;
+      let maxLength = -1;
+
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath === href) {
+          bestMatch = link;
+          maxLength = href.length;
+        } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+          bestMatch = link;
+          maxLength = href.length;
+        }
+      });
+
+      if (bestMatch) {
+        bestMatch.classList.add('active');
+      }
+    });
+  </script>
+</body>
+
+</html>

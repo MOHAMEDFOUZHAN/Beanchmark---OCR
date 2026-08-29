@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Return Record</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #E6EDF6;
+        }
+
+        header {
+            background-color: #0C294B;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        form label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        form input,
+        form select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .form-actions {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .form-actions button {
+            background-color: #0C294B;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .form-actions button:hover {
+            background-color: #093267;
+        }
+
+        nav {
+            background-color: #093267;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 12px 18px;
+            display: inline-block;
+        }
+
+        nav a:hover {
+            background-color: #0C294B;
+        }
+
+        nav a.active {
+            background-color: #0C294B;
+            font-weight: bold;
+            border-bottom: 3px solid white;
+        }
+
+        footer {
+            margin-top: 30px;
+            background-color: #0C294B;
+            color: white;
+            text-align: center;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Edit Return Record</h1>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="{{ url_for('material_list') }}">Materials</a>
+        <a href="{{ url_for('vendor_list') }}">Vendors</a>
+        <a href="{{ url_for('invoice_list') }}">Invoices</a>
+        <a href="{{ url_for('dispatch_list') }}">Dispatch</a>
+        <a href="{{ url_for('transfers_page') }}">Transfers</a>
+        <a href="{{ url_for('return_list') }}">Returns</a>
+        <a href="{{ url_for('reports_index') }}">Reports</a>
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    </nav>
+
+    <div class="container">
+        <!-- The form action is updated to submit to the edit route with the record ID -->
+        <form action="{{ url_for('return_edit', rid=return_item.id) }}" method="post">
+
+            <label for="code">Material Code:</label>
+            <input type="text" id="code" name="code" value="{{ return_item.code }}" required>
+
+            <label for="department">Department:</label>
+            <input type="text" id="department" name="department" value="{{ return_item.department }}" required>
+
+            <label for="person">Person:</label>
+            <input type="text" id="person" name="person" value="{{ return_item.person }}" required>
+
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" name="quantity" value="{{ return_item.quantity }}" required min="1">
+
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" value="{{ return_item.date }}" required>
+
+            <div class="form-actions">
+                <button type="submit">Update Return</button>
+            </div>
+        </form>
+    </div>
+
+    <footer>
+        <p>© 2025 Inventory Management System | Developed by Fouzhan</p>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('nav a');
+            let bestMatch = null;
+            let maxLength = -1;
+
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (currentPath === href) {
+                    bestMatch = link;
+                    maxLength = href.length;
+                } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+                    bestMatch = link;
+                    maxLength = href.length;
+                }
+            });
+
+            if (bestMatch) {
+                bestMatch.classList.add('active');
+            }
+        });
+    </script>
+</body>
+
+</html>

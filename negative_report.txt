@@ -1,0 +1,15 @@
+Connecting to: C:\ProgramData\BeanchMark-MMS\inventory - BeanchMark-MMS.db
+
+--- Materials with Negative Stock ---
+Code: 308, Desc: almond, Lot: BATCH-344, Qty: -96.05, Opening: -96.05
+Code: 309, Desc: peanut, Lot: BATCH-344, Qty: -12.0, Opening: -12.0
+Code: 310, Desc: fig, Lot: BATCH-344, Qty: -2.0, Opening: -2.0
+Code: 311, Desc: honey, Lot: BATCH-344, Qty: -7.0, Opening: -7.0
+Code: 312, Desc: makhana, Lot: BATCH-344, Qty: -1.0, Opening: -1.0
+Code: 313, Desc: mango slice, Lot: BATCH-344, Qty: -5.0, Opening: -5.0
+Code: 428, Desc: pgpr, Lot: BATCH-344, Qty: -6.0, Opening: -6.0
+Code: 302, Desc: pista, Lot: BATCH-050, Qty: -2.0, Opening: -2.0
+Code: 304, Desc: raisins, Lot: BATCH-050, Qty: -1.0, Opening: -1.0
+Code: 308, Desc: almond, Lot: BATCH-050, Qty: -6.299999999999997, Opening: -6.299999999999997
+
+--- Batches with Negative Stock ---

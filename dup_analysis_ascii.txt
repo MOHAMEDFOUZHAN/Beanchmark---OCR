@@ -1,0 +1,18 @@
+--- Analyzing Duplicate Material Codes ---
+
+Code: 400 (Found 2 variations in master list)
+  Variation 1: Desc='pure white', Cat='chocolates', Unit='box', Reorder=0
+  Variation 2: Desc='pure white', Cat='chocolate', Unit='box', Reorder=0
+
+Code: 502 (Found 2 variations in master list)
+  Variation 1: Desc='ghee', Cat='vakery', Unit='tin', Reorder=0
+  Variation 2: Desc='ghee', Cat='vakery', Unit='packet', Reorder=0
+
+Code: 804 (Found 2 variations in master list)
+  Variation 1: Desc='pascoe's woodland(green)', Cat='tea bags', Unit='bags', Reorder=0
+  Variation 2: Desc='pascoe's woodland(green)', Cat='tea bags', Unit='kg', Reorder=0
+
+--- Raw Rows in materials table for 803 ---
+{'id': 212, 'material_code': '803', 'description': 'homedale & pinewood', 'lot_no': 'BATCH-362', 'quantity': 0.0}
+{'id': 317, 'material_code': '803', 'description': 'homedale & pinewood', 'lot_no': 'BATCH-037', 'quantity': 0.0}
+{'id': 353, 'material_code': '803', 'description': 'homedale & pinewood', 'lot_no': 'BATCH-049', 'quantity': 9.0}

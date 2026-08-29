@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Transfer</title>
+
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #E6EDF6;
+    }
+
+    .site-header {
+      background: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    nav {
+      background: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+    }
+
+    nav a:hover {
+      background: #0C294B;
+    }
+
+    nav a.active {
+      background: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      color: #0C294B;
+      margin-bottom: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .save {
+      background: #0C294B;
+      color: white;
+    }
+
+    .back {
+      background: #6c757d;
+      color: white;
+    }
+
+    /* Autocomplete Scroll Fix */
+    .ui-autocomplete {
+      max-height: 200px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 1000;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Edit Transfer</h1>
+    </div>
+    <a href="/logout" style="color: white; text-decoration: none;">Logout</a>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="container">
+    <form method="POST" action="/transfers/edit/{{ transfer.id }}">
+      <h2>Edit Transfer Details</h2>
+
+      <input type="hidden" id="orig_outward" value="{{ transfer.outward }}">
+      <input type="hidden" id="orig_return" value="{{ transfer.return_units }}">
+
+      <div class="form-grid">
+        <div><label>Date</label><input type="date" name="date" id="date" value="{{ transfer.date }}" required></div>
+
+        <div>
+          <label>Material Code (Type to Search)</label>
+          <input type="text" name="code" id="material_code" value="{{ transfer.code }}" placeholder="e.g. RM-001"
+            required>
+        </div>
+
+        <div>
+          <label>Material Description</label>
+          <input type="text" id="material_description" value="{{ transfer.description }}" readonly
+            style="background-color: #f0f0f0;">
+        </div>
+
+        <div>
+          <label>Outward (Main/Sub)</label>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="number" step="1" name="outward_main" id="outward_main" style="width:90px;">
+            <span id="mainUnitLabel">-</span>
+            <input type="number" step="0.01" name="outward_sub" id="outward_sub" style="width:90px;">
+            <span id="subUnitLabel">-</span>
+          </div>
+        </div>
+
+        <div>
+          <label>Return (Main/Sub)</label>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="number" step="1" name="return_main" id="return_main" style="width:90px;">
+            <span id="mainUnitLabel2">-</span>
+            <input type="number" step="0.01" name="return_sub" id="return_sub" style="width:90px;">
+            <span id="subUnitLabel2">-</span>
+          </div>
+        </div>
+
+        <div>
+          <label>Base Unit</label>
+          <select name="units" id="units" onchange="updateUnitLabels(this.value)" required>
+            <option value="">--Select Unit--</option>
+            <option value="kg" {% if transfer.units=='kg' %}selected{% endif %}>Kg</option>
+            <option value="litre" {% if transfer.units=='litre' %}selected{% endif %}>Litre</option>
+            <option value="pcs" {% if transfer.units=='pcs' %}selected{% endif %}>Pieces</option>
+            <option value="box" {% if transfer.units=='box' %}selected{% endif %}>Box</option>
+            <option value="meter" {% if transfer.units=='meter' %}selected{% endif %}>Meter</option>
+            <option value="can" {% if transfer.units=='can' %}selected{% endif %}>Can</option>
+            <option value="tin" {% if transfer.units=='tin' %}selected{% endif %}>Tin</option>
+            <option value="roll" {% if transfer.units=='roll' %}selected{% endif %}>Roll</option>
+            <option value="sheet" {% if transfer.units=='sheet' %}selected{% endif %}>Sheet</option>
+            <option value="bags" {% if transfer.units=='bags' %}selected{% endif %}>Bags</option>
+            <option value="carton" {% if transfer.units=='carton' %}selected{% endif %}>Carton</option>
+            <option value="bottle" {% if transfer.units=='bottle' %}selected{% endif %}>Bottle</option>
+            <option value="packet" {% if transfer.units=='packet' %}selected{% endif %}>Packet</option>
+            <option value="bundle" {% if transfer.units=='bundle' %}selected{% endif %}>Bundle</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Department</label>
+          <select name="department" required>
+            <option value="">--Select Department--</option>
+            {% for dept in departments %}
+            <option value="{{ dept }}" {% if transfer.department==dept %}selected{% endif %}>{{ dept }}</option>
+            {% endfor %}
+            {% if transfer.department and transfer.department not in departments %}
+            <option value="{{ transfer.department }}" selected>{{ transfer.department }} (Current)</option>
+            {% endif %}
+          </select>
+        </div>
+        <div><label>Person</label><input type="text" name="person" value="{{ transfer.person }}" required></div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="back" onclick="window.location.href='/transfers'">Back</button>
+        <button type="submit" class="save">Update Transfer</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const unit = document.getElementById('units').value;
+      updateUnitLabels(unit);
+      populateValues();
+    });
+
+    // ⭐ 3. Autocomplete Logic
+    $(document).ready(function () {
+      $("#material_code").autocomplete({
+        source: function (request, response) {
+          $.getJSON("/api/materials/autocomplete", { term: request.term }, response);
+        },
+        minLength: 1,
+        select: function (event, ui) {
+          // 1. Fill Code
+          $(this).val(ui.item.value);
+
+          // 2. Fill Description
+          $("#material_description").val(ui.item.description);
+
+          // 3. Auto-Select Unit
+          if (ui.item.unit) {
+            $("#units").val(ui.item.unit).trigger('change');
+            updateUnitLabels(ui.item.unit);
+          }
+
+          return false;
+        }
+      });
+    });
+
+    function updateUnitLabels(unit) {
+      const main = document.getElementById("mainUnitLabel");
+      const sub = document.getElementById("subUnitLabel");
+      const main2 = document.getElementById("mainUnitLabel2");
+      const sub2 = document.getElementById("subUnitLabel2");
+
+      const subInput1 = document.getElementById("outward_sub");
+      const subInput2 = document.getElementById("return_sub");
+
+      if (unit === "kg") {
+        main.textContent = "kg"; sub.textContent = "g";
+        main2.textContent = "kg"; sub2.textContent = "g";
+        subInput1.style.display = "inline-block";
+        subInput2.style.display = "inline-block";
+      }
+      else if (unit === "litre") {
+        main.textContent = "L"; sub.textContent = "ml";
+        main2.textContent = "L"; sub2.textContent = "ml";
+        subInput1.style.display = "inline-block";
+        subInput2.style.display = "inline-block";
+      }
+      else {
+        main.textContent = unit || "-";
+        sub.textContent = "-";
+        main2.textContent = unit || "-";
+        sub2.textContent = "-";
+
+        subInput1.style.display = "none";
+        subInput2.style.display = "none";
+      }
+    }
+
+    function populateValues() {
+      const unit = document.getElementById('units').value;
+      const outwardTotal = parseFloat(document.getElementById('orig_outward').value) || 0;
+      const returnTotal = parseFloat(document.getElementById('orig_return').value) || 0;
+
+      // Logic for Outward
+      if (unit === 'kg' || unit === 'litre') {
+        document.getElementById('outward_main').value = Math.floor(outwardTotal);
+        const subVal = Math.round((outwardTotal % 1) * 1000);
+        document.getElementById('outward_sub').value = subVal > 0 ? subVal : '';
+      } else {
+        document.getElementById('outward_main').value = outwardTotal;
+      }
+
+      // Logic for Return
+      if (unit === 'kg' || unit === 'litre') {
+        document.getElementById('return_main').value = Math.floor(returnTotal);
+        const subVal = Math.round((returnTotal % 1) * 1000);
+        document.getElementById('return_sub').value = subVal > 0 ? subVal : '';
+      } else {
+        document.getElementById('return_main').value = returnTotal;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('nav a');
+      let bestMatch = null;
+      let maxLength = -1;
+
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath === href) {
+          bestMatch = link;
+          maxLength = href.length;
+        } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+          bestMatch = link;
+          maxLength = href.length;
+        }
+      });
+
+      if (bestMatch) {
+        bestMatch.classList.add('active');
+      }
+    });
+  </script>
+</body>
+
+</html>

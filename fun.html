@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magical Neon Particles - No Texture Fix</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #020205; }
+        canvas { display: block; }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ffff;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            pointer-events: none;
+            text-shadow: 0 0 10px #00ffff;
+            z-index: 20;
+        }
+        #tracker {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            display: none;
+            box-shadow: 0 0 20px #00ffff, inset 0 0 10px #00ffff;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        ✨ MAGICAL PARTICLE FIELD (FIXED) ✨<br>
+        WAVE HAND TO CAST SPELL
+    </div>
+    
+    <div id="tracker"></div>
+    <video id="video" autoplay playsinline style="display:none"></video>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        const CONFIG = {
+            particleCount: 6000,
+            camWidth: 64,
+            camHeight: 48,
+            sensitivity: 25,
+            forceRadius: 40,
+            forceStrength: 4.0,
+            returnSpeed: 0.04
+        };
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020205, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 80;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // --- GENERATE TEXTURE PROGRAMMATICALLY (FIXES BLACK SCREEN) ---
+        function createGlowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const context = canvas.getContext('2d');
+            const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.4, 'rgba(255,255,255,0.5)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 32, 32);
+            const texture = new THREE.CanvasTexture(canvas);
+            return texture;
+        }
+
+        // --- POST-PROCESSING ---
+        const renderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0;
+        bloomPass.strength = 1.8;
+        bloomPass.radius = 0.5;
+
+        const composer = new EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // --- PARTICLES ---
+        const geometry = new THREE.BufferGeometry();
+        const posArray = new Float32Array(CONFIG.particleCount * 3);
+        const targetArray = new Float32Array(CONFIG.particleCount * 3);
+        const colorArray = new Float32Array(CONFIG.particleCount * 3);
+
+        const colorPalette = [
+            new THREE.Color('#00ffff'),
+            new THREE.Color('#0055ff'),
+            new THREE.Color('#ff00aa')
+        ];
+
+        for(let i = 0; i < CONFIG.particleCount; i++) {
+            const x = (Math.random() - 0.5) * 200;
+            const y = (Math.random() - 0.5) * 120;
+            const z = (Math.random() - 0.5) * 60;
+
+            posArray[i*3] = x; posArray[i*3+1] = y; posArray[i*3+2] = z;
+            targetArray[i*3] = x; targetArray[i*3+1] = y; targetArray[i*3+2] = z;
+
+            const c = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+            colorArray[i*3] = c.r; colorArray[i*3+1] = c.g; colorArray[i*3+2] = c.b;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+
+        const material = new THREE.PointsMaterial({
+            size: 2.0,
+            map: createGlowTexture(), // Using our generated texture
+            vertexColors: true,
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            opacity: 0.9,
+            depthWrite: false
+        });
+
+        const particles = new THREE.Points(geometry, material);
+        scene.add(particles);
+
+        // --- WEBCAM & MOTION ---
+        const video = document.getElementById('video');
+        const motionCanvas = document.createElement('canvas');
+        motionCanvas.width = CONFIG.camWidth;
+        motionCanvas.height = CONFIG.camHeight;
+        const ctx = motionCanvas.getContext('2d', { willReadFrequently: true });
+        const tracker = document.getElementById('tracker');
+
+        let prevFrame = null;
+        let motionTarget = { x: 0, y: 0, active: false };
+
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+                video.srcObject = stream;
+            } catch (e) {
+                console.error("Camera failed", e);
+            }
+        }
+
+        function processMotion() {
+            if (video.readyState !== 4) return;
+            ctx.drawImage(video, 0, 0, CONFIG.camWidth, CONFIG.camHeight);
+            const frame = ctx.getImageData(0, 0, CONFIG.camWidth, CONFIG.camHeight);
+            
+            if (prevFrame) {
+                let sumX = 0, sumY = 0, count = 0;
+                for (let i = 0; i < frame.data.length; i += 4) {
+                    const rDiff = Math.abs(frame.data[i] - prevFrame.data[i]);
+                    const gDiff = Math.abs(frame.data[i+1] - prevFrame.data[i+1]);
+                    const bDiff = Math.abs(frame.data[i+2] - prevFrame.data[i+2]);
+                    if (rDiff + gDiff + bDiff > CONFIG.sensitivity) {
+                        const idx = i / 4;
+                        const x = idx % CONFIG.camWidth;
+                        const y = Math.floor(idx / CONFIG.camWidth);
+                        sumX += (CONFIG.camWidth - 1 - x); 
+                        sumY += y;
+                        count++;
+                    }
+                }
+                if (count > 8) {
+                    const screenX = (sumX / count) / CONFIG.camWidth;
+                    const screenY = (sumY / count) / CONFIG.camHeight;
+                    tracker.style.display = 'block';
+                    tracker.style.left = (screenX * 100) + '%';
+                    tracker.style.top = (screenY * 100) + '%';
+                    motionTarget.x = (screenX - 0.5) * 200; 
+                    motionTarget.y = -(screenY - 0.5) * 120;
+                    motionTarget.active = true;
+                } else {
+                    motionTarget.active = false;
+                    tracker.style.display = 'none';
+                }
+            }
+            prevFrame = frame;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            processMotion();
+
+            const positions = particles.geometry.attributes.position.array;
+            const time = Date.now() * 0.001;
+
+            for(let i = 0; i < CONFIG.particleCount; i++) {
+                let px = positions[i*3], py = positions[i*3+1], pz = positions[i*3+2];
+                let tx = targetArray[i*3], ty = targetArray[i*3+1], tz = targetArray[i*3+2];
+                let vx = 0, vy = 0, vz = 0;
+
+                vx += Math.sin(py * 0.03 + time) * 0.2;
+                vy += Math.cos(px * 0.03 + time) * 0.2;
+
+                if (motionTarget.active) {
+                    const dx = px - motionTarget.x;
+                    const dy = py - motionTarget.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < CONFIG.forceRadius) {
+                        const force = Math.pow(1 - dist / CONFIG.forceRadius, 2) * CONFIG.forceStrength;
+                        vx += (dx / dist) * force * 12; 
+                        vy += (dy / dist) * force * 12;
+                        vz += force * 20; 
+                    }
+                }
+
+                vx += (tx - px) * CONFIG.returnSpeed;
+                vy += (ty - py) * CONFIG.returnSpeed;
+                vz += (tz - pz) * CONFIG.returnSpeed;
+
+                positions[i*3] += vx; positions[i*3+1] += vy; positions[i*3+2] += vz;
+            }
+
+            particles.geometry.attributes.position.needsUpdate = true;
+            composer.render();
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        initCamera();
+        animate();
+    </script>
+</body>
+</html>

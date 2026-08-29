@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Daily Ledger Report</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #E6EDF6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .site-header {
+      background-color: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+
+    .logo-container h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+
+    .site-header a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    nav {
+      background-color: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+    }
+
+    nav a:hover {
+      background-color: #0C294B;
+    }
+
+    nav a.active {
+      background-color: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    main {
+      flex: 1 0 auto;
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .filter-form {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="date"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 8px 15px;
+      background: #0C294B;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #093267;
+    }
+
+    .print-btn {
+      background: #0C294B;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th {
+      background: #0C294B;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    td {
+      border-bottom: 1px solid #eee;
+      padding: 10px;
+      text-align: center;
+      color: #333;
+    }
+
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .text-left {
+      text-align: left;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    /* Style for negative numbers */
+    .negative {
+      color: red;
+      font-weight: bold;
+    }
+
+    /* Print Header Styles */
+    .print-only-header {
+      display: none;
+    }
+
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 8mm;
+      }
+
+      .print-only-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 20px;
+        font-family: Arial, sans-serif;
+        color: black;
+        border-bottom: 2px solid black;
+        padding-bottom: 10px;
+      }
+
+      .print-line-1 {
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .print-line-2 {
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .print-line-3 {
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 5px;
+      }
+
+      .print-line-4 {
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      /* Hide screen UI */
+      .site-header,
+      nav,
+      .report-header,
+      .filter-form,
+      .print-btn,
+      a[href="/logout"],
+      .no-print {
+        display: none !important;
+      }
+
+
+      .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+      }
+
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: 1px solid black !important;
+      }
+
+      th,
+      td {
+        border: 1px solid black !important;
+        padding: 6px !important;
+        font-size: 11px !important;
+        color: black !important;
+      }
+
+      th {
+        background-color: #f2f2f2 !important;
+        color: black !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  {% macro format_qty(val, unit) %}
+  {% if val == 0 %}
+  0
+  {% else %}
+  {% if unit in ['kg', 'litre'] %}
+  {# Calculate integers and decimals #}
+  {% set main = val|abs|int %}
+  {% set sub = ((val|abs - main) * 1000)|round|int %}
+
+  {# Handle negative sign #}
+  {% if val < 0 %}-{% endif %}{{ main }} {{ unit }} {# Show grams/ml only if they exist #} {% if sub> 0 %} {{ sub }} {{
+    'g' if unit == 'kg' else 'ml' }} {% endif %}
+    {% else %}
+    {# For pieces/box: Show int if whole number, else float #}
+    {{ val|int if val == val|int else val }} {{ unit }}
+    {% endif %}
+    {% endif %}
+    {% endmacro %}
+
+    <header class="site-header no-print">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+        <h1>Daily Ledger</h1>
+      </div>
+      <a href="/logout">Logout</a>
+    </header>
+
+    <div class="print-only-header">
+      <div class="print-line-1">MATERIAL MANAGEMENT</div>
+      <div class="print-line-2">BENCHMARK FACTORY</div>
+      <div class="print-line-3">
+        <span class="report-name">Daily Ledger Report</span>
+      </div>
+      <div class="print-line-4">
+        Ledger Date: {{ selected_date | format_date }}
+      </div>
+    </div>
+
+    <nav class="no-print">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/invoices">Invoices</a>
+      <a href="/transfers">Transfers</a>
+      <a href="/materials">Materials</a>
+      <a href="/storage">Storage</a>
+      <a href="/vendors">Vendors</a>
+      <a href="/dispatch">Dispatch</a>
+      <a href="/warehouse/categories">Shelf Mapping</a>
+      <a href="/reports/utilization">MUR</a>
+      <a href="/reports">Reports</a>
+    </nav>
+
+    <main>
+      <div class="container">
+        <div class="report-header no-print">
+          <form class="filter-form" method="GET" action="/reports/daily_ledger">
+            <label>Select Date:</label>
+            <input type="date" name="date" value="{{ selected_date }}" required>
+            <button type="submit">View Report</button>
+          </form>
+          <button class="print-btn" onclick="window.print()">Print</button>
+        </div>
+
+        <p class="no-print">Report generated on: <strong>{{ current_date }}</strong> for Date: <strong>{{ selected_date
+            | format_date
+            }}</strong></p>
+
+
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Material Code</th>
+              <th>Material Name</th>
+              <th>Opening</th>
+              <th>Transfer Out</th>
+              <th>Return In</th>
+              <th>Closing</th>
+              <th>Reorder Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in ledger_data %}
+            <tr>
+              <td>
+                {{ selected_date | format_date }}
+              </td>
+              <td>{{ row.code }}</td>
+              <td class="text-left">{{ row.description }}</td>
+
+              <td class="bold">{{ format_qty(row.opening_stock, row.unit) }}</td>
+
+              <td class="{{ 'negative' if row.transfer_out < 0 else '' }}">
+                {{ format_qty(row.transfer_out, row.unit) }}
+              </td>
+
+              <td>{{ format_qty(row.return_in, row.unit) }}</td>
+
+              <td class="bold">{{ format_qty(row.closing_stock, row.unit) }}</td>
+
+              <td>
+                {% if row.reorder_level %}
+                {{ format_qty(row.reorder_level, row.unit) }}
+                {% else %}
+                -
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="8">No data found for this date.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('nav a');
+        let bestMatch = null;
+        let maxLength = -1;
+
+        navLinks.forEach(link => {
+          const href = link.getAttribute('href');
+          if (currentPath === href) {
+            bestMatch = link;
+            maxLength = href.length;
+          } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+            bestMatch = link;
+            maxLength = href.length;
+          }
+        });
+
+        if (bestMatch) {
+          bestMatch.classList.add('active');
+        }
+      });
+    </script>
+    <footer>© 2025 Material Management System | Developed by Maple Pro</footer>
+</body>
+
+</html>

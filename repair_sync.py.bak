@@ -1,0 +1,52 @@
+import sqlite3
+import os
+
+db_path = r"C:\ProgramData\BeanchMark-MMS\inventory - BeanchMark-MMS.db"
+
+if not os.path.exists(db_path):
+    print("Database not found.")
+    exit()
+
+conn = sqlite3.connect(db_path)
+cur = conn.cursor()
+
+try:
+    # 1. Update no_of_items in invoices based on actual invoice_items count
+    cur.execute("""
+        UPDATE invoices 
+        SET no_of_items = (
+            SELECT COUNT(*) 
+            FROM invoice_items 
+            WHERE invoice_items.invoice_id = invoices.id
+        )
+    """)
+    print(f"Updated no_of_items for {cur.rowcount} invoices.")
+
+    # 2. Find items in invoice_items that are missing from batches
+    # (This fixes the missing item from Live Material page)
+    cur.execute("""
+        SELECT ii.invoice_id, ii.material, ii.quantity, ii.unit, ii.batch_no, i.date, m.description
+        FROM invoice_items ii
+        JOIN invoices i ON ii.invoice_id = i.id
+        JOIN materials m ON ii.material = m.material_code
+        LEFT JOIN batches b ON ii.invoice_id = b.invoice_id AND ii.material = b.material_code
+        WHERE b.id IS NULL
+    """)
+    missing_batches = cur.fetchall()
+    
+    for row in missing_batches:
+        invoice_id, material, quantity, unit, batch_no, inv_date, description = row
+        cur.execute("""
+            INSERT INTO batches (batch_no, material_code, description, received_quantity, available_quantity, uom, received_date, created_at, invoice_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+        """, (batch_no, material, description, quantity, quantity, unit, inv_date, invoice_id))
+        print(f"Fixed missing batch for item {material} in invoice {invoice_id}")
+
+    conn.commit()
+    print("Repair completed successfully.")
+
+except Exception as e:
+    conn.rollback()
+    print(f"Error: {e}")
+finally:
+    conn.close()

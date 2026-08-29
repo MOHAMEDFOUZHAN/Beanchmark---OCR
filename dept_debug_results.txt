@@ -1,0 +1,17 @@
+﻿Listing unique departments and their lengths:
+--------------------------------------------------
+Name: [chocolae.factory] | Length: 16 | Rows: 2
+Name: [chocolate.facory] | Length: 16 | Rows: 1
+Name: [chocolate.factor] | Length: 16 | Rows: 1
+Name: [chocolate.factory] | Length: 17 | Rows: 142
+Name: [chocolate.factory.] | Length: 18 | Rows: 1
+Name: [chocolate.factory.(new)] | Length: 23 | Rows: 1
+Name: [chocolate.facttory] | Length: 18 | Rows: 1
+Name: [kitchen.and.chocolate.factory] | Length: 29 | Rows: 1
+Name: [oil.counter] | Length: 11 | Rows: 13
+Name: [oil.couter] | Length: 10 | Rows: 1
+Name: [oil.factory] | Length: 11 | Rows: 2
+Name: [tea] | Length: 3 | Rows: 1
+Name: [tea.counter] | Length: 11 | Rows: 1
+Name: [tea.factory] | Length: 11 | Rows: 106
+Name: [varkey.factory] | Length: 14 | Rows: 15

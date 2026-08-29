@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Add Invoice</title>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #E6EDF6;
+      line-height: 1.5;
+    }
+
+    .site-header {
+      background-color: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+
+    .site-header a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 8px 12px;
+      border-radius: 5px;
+    }
+
+    .site-header a:hover {
+      background-color: #093267;
+    }
+
+    nav {
+      background-color: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+    }
+
+    nav a:hover {
+      background-color: #0C294B;
+    }
+
+    nav a.active {
+      background-color: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+
+    .container {
+      max-width: 950px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h2,
+    h3 {
+      color: #0C294B;
+      margin: 0 0 12px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    label {
+      display: block;
+      margin: 8px 0 6px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+
+    input[readonly] {
+      background-color: #f4f4f4;
+      cursor: not-allowed;
+    }
+
+    .section {
+      border-top: 2px solid #E6EDF6;
+      padding-top: 15px;
+      margin-top: 20px;
+    }
+
+    .section .form-grid {
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
+
+    .summary-box {
+      margin-top: 25px;
+      border-top: 2px solid #E6EDF6;
+      padding-top: 15px;
+    }
+
+    .summary-box .form-grid {
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+    }
+
+    .actions {
+      margin-top: 25px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .save {
+      background: #0C294B;
+      color: white;
+    }
+
+    .back {
+      background: #6c757d;
+      color: white;
+    }
+
+    .ui-autocomplete {
+      max-height: 200px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 1000;
+    }
+
+    /* OCR Scanner Styles */
+    .ocr-scanner-card {
+      background: linear-gradient(135deg, #f0f7ff 0%, #e6f0fa 100%);
+      border: 2px dashed #007bff;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0, 123, 255, 0.08);
+      transition: all 0.2s ease;
+    }
+    .ocr-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .ocr-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.05rem;
+      color: #0C294B;
+    }
+    .ocr-badge {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .ocr-badge-processing {
+      background: #fef08a;
+      color: #854d0e;
+      animation: pulse 1.5s infinite;
+    }
+    .ocr-badge-success {
+      background: #bbf7d0;
+      color: #166534;
+    }
+    .ocr-badge-error {
+      background: #fecaca;
+      color: #991b1b;
+    }
+    .ocr-dropzone {
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .ocr-dropzone:hover, .ocr-dropzone.drag-over {
+      border-color: #007bff;
+      background: #f8fbff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+    }
+    .dropzone-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .dropzone-text {
+      font-size: 0.95rem;
+      color: #334155;
+    }
+    .dropzone-sub {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    .ocr-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #0056b3;
+      font-weight: 600;
+    }
+    .ocr-spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid #cbd5e1;
+      border-top-color: #007bff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .ocr-success-msg {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #15803d;
+      font-weight: 600;
+      background: #dcfce7;
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+    .ocr-highlight {
+      animation: flash-green 2.5s ease-out;
+      border-color: #22c55e !important;
+      background-color: #f0fdf4 !important;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    @keyframes flash-green {
+      0% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.4); }
+      100% { box-shadow: none; }
+    }
+
+    @media (max-width:800px) {
+
+      .form-grid,
+      .section .form-grid,
+      .summary-box .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Add Invoice</h1>
+    </div>
+    <a href="/logout">Logout</a>
+  </header>
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="container">
+    <form method="POST" action="/invoices/add" id="invoiceForm">
+
+      <!-- OCR Smart Scanner Box - INSIDE FORM so always visible at the top -->
+      <div class="ocr-scanner-card" id="ocrCard">
+        <div class="ocr-header">
+          <div class="ocr-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007bff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4a2 2 0 0 1 2-2h3"></path><path d="M4 17v3a2 2 0 0 0 2 2h3"></path><path d="M20 7V4a2 2 0 0 0-2-2h-3"></path><path d="M20 17v3a2 2 0 0 1-2 2h-3"></path><line x1="9" y1="12" x2="15" y2="12"></line></svg>
+            <span><strong>📄 Scan Invoice to Auto-Fill</strong> — Upload PDF or photo of invoice</span>
+          </div>
+          <span class="ocr-badge" id="ocrStatusBadge">Ready</span>
+        </div>
+        
+        <div class="ocr-dropzone" id="ocrDropZone" onclick="document.getElementById('invoiceFileInput').click()">
+          <input type="file" id="invoiceFileInput" accept="image/*,.pdf" style="display:none" onchange="handleInvoiceFileUpload(this.files[0])">
+          <div class="dropzone-content">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#007bff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg>
+            <div class="dropzone-text">
+              <strong style="font-size:1.05rem; color:#0056b3;">Click here to upload invoice</strong><br>
+              <span style="font-size:0.82rem; color:#64748b;">Supports: PDF, PNG, JPG — auto-fills all boxes below instantly</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="ocrLoading" class="ocr-loading" style="display:none;">
+          <div class="ocr-spinner"></div>
+          <span id="ocrLoadingText">Reading invoice with OCR... please wait...</span>
+        </div>
+
+        <div id="ocrSuccessMsg" class="ocr-success-msg" style="display:none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <span id="ocrSuccessText">Invoice scanned! All boxes filled automatically. Review and click Save Invoice.</span>
+        </div>
+      </div>
+
+      <h2>Invoice Details</h2>
+      <div class="form-grid">
+        <div>
+          <label>Purchase ID</label>
+          <select name="purchase_id">
+            <option value="">--Select Type--</option>
+            <option value="BTE">BTE</option>
+            <option value="S & ST">S & ST</option>
+          </select>
+        </div>
+        <div><label>Date</label><input type="date" name="date" id="date"></div>
+        <div><label>Invoice No</label><input type="text" name="invoice_no"></div>
+        <div><label>Vendor Name</label><input type="text" name="vendor"></div>
+        <div><label>No. of Items</label><input type="number" id="no_of_items" name="no_of_items" value="1" min="1"
+            onchange="generateMaterialSections()"></div>
+      </div>
+
+      <div id="materialsContainer"></div>
+      <input type="hidden" id="grand_total" name="grand_total">
+
+      <div class="summary-box">
+        <h3>Financial Summary</h3>
+        <div class="form-grid">
+          <div><label>Total (Excl. Tax)</label><input id="subtotal" name="subtotal" readonly></div>
+          <div><label>Total IGST</label><input id="total_igst" name="total_igst" readonly></div>
+          <div><label>Total GST (CGST+SGST)</label><input id="total_gst" name="total_gst" readonly></div>
+          <div><label>CGST Value</label><input id="cgst_percent" name="cgst_percent" readonly></div>
+          <div><label>SGST Value</label><input id="sgst_percent" name="sgst_percent" readonly></div>
+          <div><label>Round Off Value</label><input type="number" step="0.01" id="round_off" name="round_off" value="0"
+              oninput="updateFinalTotal()"></div>
+          <div><label>Final Total</label><input id="final_total" name="final_total" readonly></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="back" onclick="window.location.href='/invoices'">Back</button>
+        <button type="submit" class="save">Save Invoice</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+  <script>
+    const dateInput = document.getElementById("date");
+    if (!dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
+
+    document.addEventListener("DOMContentLoaded", function () {
+      generateMaterialSections();
+    });
+
+    function generateMaterialSections() {
+      const container = document.getElementById('materialsContainer');
+      const count = parseInt(document.getElementById('no_of_items').value) || 1;
+      const currentSections = container.getElementsByClassName('section').length;
+
+      if (count === currentSections) return;
+
+      if (count > currentSections) {
+        // Add newly required sections
+        for (let i = currentSections + 1; i <= count; i++) {
+          const div = document.createElement('div');
+          div.className = 'section';
+          div.id = `section_${i}`;
+          div.innerHTML = `
+            <h3>Material ${i} Details</h3>
+            <div class="form-grid">
+                <div><label>Material Code</label><input type="text" name="material_code_${i}" id="material_code_${i}" placeholder="Type to search..." required></div>
+              <div><label>Description</label><input type="text" name="material_name_${i}" id="material_name_${i}" required></div>
+              <div><label>Category</label><input type="text" name="category_${i}" id="category_${i}"></div>
+              <div><label>Base Unit</label>
+                <select name="unit_${i}" id="unit_${i}">
+                  <option value="kg">Kg</option>
+                  <option value="litre">Litre</option>
+                  <option value="pcs">Pieces</option>
+                  <option value="box">Box</option>
+                  <option value="meter">Meter</option>
+                  <option value="can">Can</option>
+                  <option value="tin">Tin</option>
+                  <option value="roll">Roll</option>
+                  <option value="sheet">Sheet</option>
+                  <option value="bags">Bags</option>
+                  <option value="carton">Carton</option>
+                  <option value="bottle">Bottle</option>
+                  <option value="packet">Packet</option>
+                  <option value="bundle">Bundle</option>
+                </select>
+              </div>
+              <div><label>Quantity</label>
+                <input type="number" step="0.001" name="quantity_${i}" id="quantity_${i}" placeholder="e.g. 27.52" oninput="recalculateTotals()" required>
+              </div>
+              <div><label>Unit Price</label><input type="number" step="0.01" name="unit_price_${i}" id="unit_price_${i}" oninput="recalculateTotals()" ></div>
+              <div><label>Discount %</label><input type="number" step="0.01" name="discount_${i}" value="0" oninput="recalculateTotals()"></div>
+              <div><label>GST %</label><input type="number" step="0.01" name="gst_${i}" value="0" oninput="recalculateTotals()"></div>
+              <div><label>GST Value</label><input type="number" step="0.01" name="gst_value_${i}" id="gst_value_${i}" readonly></div>
+              <div><label>IGST %</label><input type="number" step="0.01" name="igst_${i}" value="0" oninput="recalculateTotals()"></div>
+              <div><label>IGST Value</label><input type="number" step="0.01" name="igst_value_${i}" id="igst_value_${i}" readonly></div>
+              <div><label>Purchase Date</label><input type="date" name="purchase_date_${i}" id="purchase_date_${i}"></div>
+              <div><label>Expiry Date</label><input type="date" name="expiry_date_${i}" id="expiry_date_${i}"></div>
+              <div><label>Reorder Level</label><input type="number" name="reorder_level_${i}" id="reorder_level_${i}" placeholder="e.g. 50"></div>
+              <div><label>Lot Number</label><input type="text" name="lot_no_${i}" id="lot_no_${i}" placeholder="Auto-fills or enter new"></div>
+            </div>`;
+          container.appendChild(div);
+          initAutocomplete(i);
+        }
+      } else {
+        // Remove excess sections
+        for (let i = currentSections; i > count; i--) {
+          const section = document.getElementById(`section_${i}`);
+          if (section) container.removeChild(section);
+        }
+      }
+      recalculateTotals();
+    }
+
+    function initAutocomplete(i) {
+      $(`#material_code_${i}`).autocomplete({
+        source: function (request, response) {
+          $.getJSON("/api/materials/autocomplete", { term: request.term }, response);
+        },
+        minLength: 1,
+        select: function (event, ui) {
+          $(this).val(ui.item.value);
+          $(`#material_name_${i}`).val(ui.item.description);
+          $(`#category_${i}`).val(ui.item.category);
+          $(`#reorder_level_${i}`).val(ui.item.reorder_level);
+          if (ui.item.unit) $(`#unit_${i}`).val(ui.item.unit);
+          return false;
+        }
+      });
+    }
+
+    // Helper for Rounding
+    function round2(num) {
+      return Math.round((num + Number.EPSILON) * 100) / 100;
+    }
+
+    // ⭐ HYBRID LOGIC: Precise Net + Per-Row Rounded Tax
+    function recalculateTotals() {
+      const count = parseInt(document.getElementById('no_of_items').value) || 1;
+      let subtotal = 0, totalGst = 0, totalIgst = 0;
+
+      for (let i = 1; i <= count; i++) {
+        try {
+          const qty = parseFloat(document.getElementById(`quantity_${i}`)?.value || 0);
+          const price = parseFloat(document.getElementById(`unit_price_${i}`)?.value || 0);
+          const discount = parseFloat(document.querySelector(`[name='discount_${i}']`)?.value || 0);
+          const gst = parseFloat(document.querySelector(`[name='gst_${i}']`)?.value || 0);
+          const igst = parseFloat(document.querySelector(`[name='igst_${i}']`)?.value || 0);
+
+          // 1. Gross & Net (Precise)
+          const grossAmount = qty * price;
+          const discountAmount = grossAmount * (discount / 100);
+          const netAmount = grossAmount - discountAmount;
+
+          // 2. Tax (Rounded IMMEDIATELY per row)
+          const gstAmount = round2(netAmount * (gst / 100));
+          const igstAmount = round2(netAmount * (igst / 100));
+
+          // Update UI
+          document.getElementById(`gst_value_${i}`).value = gstAmount.toFixed(2);
+          document.getElementById(`igst_value_${i}`).value = igstAmount.toFixed(2);
+
+          // Accumulate
+          subtotal += netAmount; // Accumulate precise net
+          totalGst += gstAmount; // Accumulate rounded tax
+          totalIgst += igstAmount; // Accumulate rounded tax
+
+        } catch (error) { console.error(error); }
+      }
+
+      // Display rounded totals
+      document.getElementById("subtotal").value = subtotal.toFixed(2);
+      document.getElementById("total_gst").value = totalGst.toFixed(2);
+      document.getElementById("total_igst").value = totalIgst.toFixed(2);
+
+      // Grand Total = Rounded(Subtotal) + Total Rounded Tax
+      // This matches the visual calculation on the screen
+      const finalSubtotal = round2(subtotal);
+      const calculatedGrandTotal = finalSubtotal + totalGst + totalIgst;
+
+      document.getElementById("grand_total").value = calculatedGrandTotal.toFixed(2);
+
+      document.getElementById("cgst_percent").value = (totalGst / 2).toFixed(2);
+      document.getElementById("sgst_percent").value = (totalGst / 2).toFixed(2);
+
+      updateFinalTotal();
+    }
+
+    function updateFinalTotal() {
+      const grandTotal = parseFloat(document.getElementById("grand_total").value) || 0;
+      const roundOff = parseFloat(document.getElementById("round_off").value) || 0;
+      document.getElementById("final_total").value = (grandTotal + roundOff).toFixed(2);
+    }
+
+    // ===== Smart OCR Invoice Scanning & Auto-Fill =====
+    function handleInvoiceFileUpload(file) {
+      if (!file) return;
+
+      const statusBadge = document.getElementById('ocrStatusBadge');
+      const dropZone = document.getElementById('ocrDropZone');
+      const loading = document.getElementById('ocrLoading');
+      const successMsg = document.getElementById('ocrSuccessMsg');
+
+      statusBadge.className = 'ocr-badge ocr-badge-processing';
+      statusBadge.innerText = 'Scanning...';
+      dropZone.style.opacity = '0.5';
+      loading.style.display = 'flex';
+      successMsg.style.display = 'none';
+
+      const formData = new FormData();
+      formData.append('invoice_file', file);
+
+      fetch('/api/ocr/scan_invoice', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(res => {
+        loading.style.display = 'none';
+        dropZone.style.opacity = '1';
+
+        if (res.success && res.data) {
+          const data = res.data;
+          statusBadge.className = 'ocr-badge ocr-badge-success';
+          statusBadge.innerText = 'Auto-Filled';
+          successMsg.style.display = 'flex';
+
+          // Auto-fill header inputs
+          if (data.invoice_no) fillAndHighlight('input[name="invoice_no"]', data.invoice_no);
+          if (data.date) fillAndHighlight('#date', data.date);
+          if (data.vendor) fillAndHighlight('input[name="vendor"]', data.vendor);
+
+          // Auto-fill line items if detected
+          if (data.items && data.items.length > 0) {
+            const noOfItemsInput = document.getElementById('no_of_items');
+            noOfItemsInput.value = data.items.length;
+            generateMaterialSections();
+
+            // ✅ Fallback average IGST rate (only used if per-item rate is 0)
+            let avgIgstRate = 0;
+            if (parseFloat(data.total_igst) > 0 && parseFloat(data.subtotal) > 0) {
+              avgIgstRate = Math.round((parseFloat(data.total_igst) / parseFloat(data.subtotal)) * 100);
+            }
+
+            data.items.forEach((item, idx) => {
+              const i = idx + 1;
+
+              // Fill description first
+              fillAndHighlight(`#material_name_${i}`, item.name);
+              if (item.quantity) fillAndHighlight(`#quantity_${i}`, item.quantity);
+              if (item.unit_price) fillAndHighlight(`#unit_price_${i}`, item.unit_price);
+              if (item.unit) {
+                const unitSelect = document.getElementById(`unit_${i}`);
+                if (unitSelect) unitSelect.value = item.unit;
+              }
+
+              // ✅ Use per-item IGST % (exact from invoice), fall back to average only if 0
+              const igstInput = document.querySelector(`[name='igst_${i}']`);
+              if (igstInput) {
+                const perItemIgst = parseFloat(item.igst_percent) || 0;
+                const perItemGst  = parseFloat(item.gst_percent)  || 0;
+                if (perItemIgst > 0) {
+                  igstInput.value = perItemIgst;           // ✅ Correct per-item IGST
+                } else if (avgIgstRate > 0) {
+                  igstInput.value = avgIgstRate;           // Fallback average
+                }
+                // Fill GST % too if present
+                const gstInput = document.querySelector(`[name='gst_${i}']`);
+                if (gstInput && perItemGst > 0) gstInput.value = perItemGst;
+              }
+
+              // ✅ AUTO LOOKUP MATERIAL CODE from factory database
+              if (item.name) {
+                fetch(`/api/materials/lookup_by_description?name=${encodeURIComponent(item.name)}`)
+                  .then(r => r.json())
+                  .then(match => {
+                    const codeInput = document.getElementById(`material_code_${i}`);
+                    const nameInput = document.getElementById(`material_name_${i}`);
+                    const catInput = document.getElementById(`category_${i}`);
+                    const unitSel = document.getElementById(`unit_${i}`);
+
+                    if (match.found) {
+                      // Single match — fill it directly
+                      if (match.all_matches.length === 1) {
+                        fillAndHighlight(`#material_code_${i}`, match.code);
+                        if (nameInput && !nameInput.value) fillAndHighlight(`#material_name_${i}`, match.description);
+                        if (catInput && !catInput.value) fillAndHighlight(`#category_${i}`, match.category);
+                        if (unitSel && match.unit) unitSel.value = match.unit;
+                      } else {
+                        // Multiple matches — fill best match, show options as tooltip
+                        fillAndHighlight(`#material_code_${i}`, match.code);
+                        if (catInput && !catInput.value) fillAndHighlight(`#category_${i}`, match.category);
+                        if (unitSel && match.unit) unitSel.value = match.unit;
+
+                        // Show a notice that multiple codes exist
+                        const options = match.all_matches.map(m => `${m.code} - ${m.description}`).join('\n');
+                        if (codeInput) {
+                          codeInput.title = `Multiple matches found:\n${options}\n\nAuto-selected: ${match.code}`;
+                          codeInput.style.borderColor = '#f59e0b';
+                        }
+                      }
+                    } else {
+                      // Not found in DB — highlight in red, let user enter manually
+                      if (codeInput) {
+                        codeInput.placeholder = '⚠ New item – enter code';
+                        codeInput.style.borderColor = '#ef4444';
+                        codeInput.title = `"${item.name}" not found in factory database. Please enter a new code manually.`;
+                      }
+                    }
+                  })
+                  .catch(e => console.warn('Code lookup failed:', e));
+              }
+            });
+
+            recalculateTotals();
+          }
+
+          if (parseFloat(data.subtotal) > 0) fillAndHighlight('#subtotal', data.subtotal);
+          if (parseFloat(data.total_gst) > 0) fillAndHighlight('#total_gst', data.total_gst);
+          if (parseFloat(data.cgst_percent) > 0) fillAndHighlight('#cgst_percent', data.cgst_percent);
+          if (parseFloat(data.sgst_percent) > 0) fillAndHighlight('#sgst_percent', data.sgst_percent);
+          if (parseFloat(data.total_igst) > 0) fillAndHighlight('#total_igst', data.total_igst);
+          if (parseFloat(data.round_off) !== 0) fillAndHighlight('#round_off', data.round_off);
+          if (parseFloat(data.grand_total) > 0) {
+            fillAndHighlight('#grand_total', data.grand_total);
+            fillAndHighlight('#final_total', data.grand_total);
+          }
+
+          updateFinalTotal();
+        } else {
+          statusBadge.className = 'ocr-badge ocr-badge-error';
+          statusBadge.innerText = 'Scan Failed';
+          alert('OCR Error: ' + (res.error || 'Failed to extract invoice data'));
+        }
+      })
+      .catch(err => {
+        loading.style.display = 'none';
+        dropZone.style.opacity = '1';
+        statusBadge.className = 'ocr-badge ocr-badge-error';
+        statusBadge.innerText = 'Error';
+        console.error('OCR Upload Error:', err);
+        alert('Failed to connect to OCR service: ' + err);
+      });
+    }
+
+    function fillAndHighlight(selector, value) {
+      const el = document.querySelector(selector);
+      if (el) {
+        el.value = value;
+        el.classList.add('ocr-highlight');
+        setTimeout(() => el.classList.remove('ocr-highlight'), 3000);
+      }
+    }
+
+    // Drag and Drop Handling
+    document.addEventListener('DOMContentLoaded', function() {
+      const dropZone = document.getElementById('ocrDropZone');
+      if (dropZone) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+          dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+          }, false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+          dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+          }, false);
+        });
+        dropZone.addEventListener('drop', (e) => {
+          const dt = e.dataTransfer;
+          const files = dt.files;
+          if (files.length) handleInvoiceFileUpload(files[0]);
+        });
+      }
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('nav a');
+      let bestMatch = null;
+      let maxLength = -1;
+
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath === href) {
+          bestMatch = link;
+          maxLength = href.length;
+        } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+          bestMatch = link;
+          maxLength = href.length;
+        }
+      });
+
+      if (bestMatch) {
+        bestMatch.classList.add('active');
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Reorder Report</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #E6EDF6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* NEW HEADER STYLES */
+    .site-header {
+      background-color: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      object-fit: cover;
+      background-color: #fff;
+      /* White background for placeholder */
+    }
+
+    .logo-container h1 {
+      font-size: 22px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      color: white;
+      margin: 0;
+    }
+
+    /* END OF NEW HEADER STYLES */
+
+    /* Navigation */
+    nav {
+      background-color: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+      display: inline-block;
+    }
+
+    nav a:hover {
+      background-color: #0C294B;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      overflow-x: auto;
+      flex: 1 0 auto;
+    }
+
+
+    h2 {
+      margin-top: 0;
+      color: #0C294B;
+    }
+
+    .date-stamp {
+      text-align: right;
+      color: #555;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      min-width: 600px;
+    }
+
+    table th,
+    table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    table thead {
+      background: #0C294B;
+      color: white;
+    }
+
+    table tbody tr:hover {
+      background: #f1f7ff;
+    }
+
+    .low {
+      color: red;
+      font-weight: bold;
+    }
+
+    .warning {
+      color: orange;
+      font-weight: bold;
+    }
+
+    .actions {
+      margin-top: 25px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .actions button {
+      background-color: #0C294B;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .actions button:hover {
+      background: #17497a;
+    }
+
+    @media(max-width:768px) {
+      .logo-container h1 {
+        font-size: 18px;
+      }
+
+      .logo-container img {
+        height: 40px;
+        width: 40px;
+      }
+
+      nav {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+
+    /* Print Header Styles */
+    .print-only-header {
+      display: none;
+    }
+
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm;
+      }
+
+      .print-only-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 20px;
+        font-family: Arial, sans-serif;
+        color: black;
+        border-bottom: 2px solid black;
+        padding-bottom: 10px;
+      }
+
+      .print-line-1 {
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .print-line-2 {
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .print-line-3 {
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 5px;
+      }
+
+      .print-line-4 {
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      /* Hide screen UI */
+      .site-header,
+      nav,
+      .actions,
+      button,
+      a[href="/logout"],
+      .no-print {
+        display: none !important;
+      }
+
+
+      .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+      }
+
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        border: 1px solid black !important;
+      }
+
+      th,
+      td {
+        border: 1px solid black !important;
+        padding: 8px !important;
+        font-size: 12px !important;
+        color: black !important;
+      }
+
+      th {
+        background-color: #f2f2f2 !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- UPDATED HEADER -->
+  <header class="site-header no-print">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Reorder Report</h1>
+    </div>
+    <a href="/logout" style="color: white; text-decoration: none;">Logout</a>
+  </header>
+
+  <div class="print-only-header">
+    <div class="print-line-1">MATERIAL MANAGEMENT</div>
+    <div class="print-line-2">BENCHMARK FACTORY</div>
+    <div class="print-line-3">
+      <span class="report-name">Reorder Level Report</span>
+    </div>
+    <div class="print-line-4">
+      Report Date: {{ current_date }}
+    </div>
+  </div>
+
+  <div class="container">
+    <h2 class="no-print">Materials Below Reorder Level</h2>
+
+    <div class="date-stamp">
+      Report generated on: {{ current_date }}
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Description</th>
+          <th>Reorder Level</th>
+          <th>Current Stock</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in materials %}
+        <tr>
+          <td>{{ m.material_code }}</td>
+          <td>{{ m.description }}</td>
+          <td>{{ m.reorder_level }}</td>
+          <td class="{% if m.quantity == 0 %}low{% else %}warning{% endif %}">
+            {{ m.quantity }}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" style="padding:15px; color:#666; font-style:italic;">
+            ✅ No items need to be reordered at this time.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="actions">
+      <button type="button" onclick="location.href='/reports'">⬅ Back</button>
+      <button onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+  <footer>© 2025 Material Management System | Developed by Maple Pro</footer>
+</body>
+
+</html>

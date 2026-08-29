@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Inventory Management System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      /* Deep Blue Gradient Background */
+      background: linear-gradient(135deg, #0C294B 0%, #093267 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 0 20px;
+      overflow: hidden; /* Prevents scrollbars when leaves fall */
+      position: relative;
+    }
+
+    /* --- FALLING LEAVES STYLES --- */
+    .leaf {
+      position: absolute;
+      top: -50px;
+      /* Autumn Colors will be assigned via JS, but here is a default */
+      color: #e67e22; 
+      z-index: 1; /* Behind the login box (box is usually higher, see below) */
+      pointer-events: none; /* Ensures you can click through leaves */
+      opacity: 0.8;
+    }
+
+    @keyframes fall {
+      0% {
+        top: -10%;
+        transform: translateX(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        top: 110%;
+        transform: translateX(100px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* --- LOGIN BOX --- */
+    .login-container {
+      background-color: rgba(255, 255, 255, 0.95); /* Slight transparency for cool effect */
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* Darker shadow for depth */
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-sizing: border-box;
+      position: relative;
+      z-index: 10; /* IMPORTANT: Keeps login box ABOVE the leaves */
+      backdrop-filter: blur(5px); /* Adds a glass effect if browser supports it */
+    }
+
+    .logo-container {
+      margin-bottom: 25px;
+    }
+
+    .logo-container img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: #E6EDF6;
+      padding: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .login-container h2 {
+      margin-bottom: 25px;
+      color: #0C294B;
+      font-size: 24px;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #0C294B;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-group .icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #aaa;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 12px 15px 12px 45px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .login-container input:focus {
+      border-color: #0C294B;
+      box-shadow: 0 0 5px rgba(12,41,75,0.3);
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 12px;
+      background-color: #0C294B;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .login-container button:hover {
+      background-color: #093267;
+      transform: translateY(-2px);
+    }
+
+    .error {
+      color: #D93025;
+      background-color: #F8D7DA;
+      border: 1px solid #F5C6CB;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="leaves-container"></div>
+
+  <div class="login-container">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+    </div>
+    <h2>Material Management System</h2>
+    
+    <form id="loginForm" method="POST" action="/login">
+      {% if error %}
+        <p class="error">{{ error }}</p>
+      {% endif %}
+      
+      <div class="input-group">
+        <label for="username">User ID</label>
+        <div class="input-wrapper">
+          <i class="fas fa-user icon"></i>
+          <input type="text" id="username" name="username" placeholder="Enter your username" required>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <i class="fas fa-lock icon"></i>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+        </div>
+      </div>
+
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <script>
+    // --- FALLING LEAVES SCRIPT ---
+    function createLeaf() {
+      const leaf = document.createElement('i');
+      
+      // Use the FontAwesome Maple Leaf icon
+      leaf.classList.add('fa-brands', 'fa-canadian-maple-leaf', 'leaf');
+      
+      // Random start position (left)
+      leaf.style.left = Math.random() * 100 + 'vw';
+      
+      // Randomize Animation Duration (Falling speed: between 5s and 10s)
+      const duration = Math.random() * 5 + 5;
+      leaf.style.animation = `fall ${duration}s linear infinite`;
+      
+      // Random Size (between 15px and 45px)
+      const size = Math.random() * 30 + 15;
+      leaf.style.fontSize = size + 'px';
+      
+      // Random Autumn Colors
+      const colors = ['#e74c3c', '#e67e22', '#f1c40f', '#d35400', '#c0392b'];
+      leaf.style.color = colors[Math.floor(Math.random() * colors.length)];
+      
+      // Random delay before starting
+      leaf.style.animationDelay = Math.random() * 5 + 's';
+
+      document.body.appendChild(leaf);
+
+      // Remove the leaf after it finishes falling to prevent memory issues
+      setTimeout(() => {
+        leaf.remove();
+      }, duration * 1000);
+    }
+
+    // Create a new leaf every 300 milliseconds
+    setInterval(createLeaf, 300);
+
+    // --- FORM VALIDATION SCRIPT (Your existing code) ---
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+      let user = document.getElementById("username").value.trim();
+      let pass = document.getElementById("password").value.trim();
+      
+      if (user === "" || pass === "") {
+        let errorEl = document.querySelector('.error');
+        if (!errorEl) {
+          let form = document.getElementById('loginForm');
+          let newError = document.createElement('p');
+          newError.className = 'error';
+          newError.textContent = 'Please enter both User ID and Password.';
+          form.prepend(newError); 
+          e.preventDefault(); 
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
