@@ -86,7 +86,15 @@ except Exception as e:
     print("OCR Invoice parser load warning:", e)
 
 
-app = Flask(__name__)
+import sys
+
+if getattr(sys, 'frozen', False):
+    base_dir = sys._MEIPASS
+    app = Flask(__name__,
+                template_folder=os.path.join(base_dir, 'templates'),
+                static_folder=os.path.join(base_dir, 'static'))
+else:
+    app = Flask(__name__)
 app.secret_key = "super_secret_key"
 
 @app.template_filter('format_date')
@@ -374,7 +382,8 @@ def update_database_schema():
         item_updates = [
             ('discount_percentage', "ALTER TABLE invoice_items ADD COLUMN discount_percentage REAL DEFAULT 0"),
             ('igst_percentage', "ALTER TABLE invoice_items ADD COLUMN igst_percentage REAL DEFAULT 0"),
-            ('item_igst_value', "ALTER TABLE invoice_items ADD COLUMN item_igst_value REAL DEFAULT 0")
+            ('item_igst_value', "ALTER TABLE invoice_items ADD COLUMN item_igst_value REAL DEFAULT 0"),
+            ('hsn_sac', "ALTER TABLE invoice_items ADD COLUMN hsn_sac TEXT")
         ]
         
         for col_name, sql in item_updates:
@@ -392,6 +401,11 @@ def update_database_schema():
             cur.execute("ALTER TABLE materials ADD COLUMN purchase_date TEXT")
         if 'expiry_date' not in mat_columns:
             cur.execute("ALTER TABLE materials ADD COLUMN expiry_date TEXT")
+        if 'hsn_sac' not in mat_columns:
+            try:
+                cur.execute("ALTER TABLE materials ADD COLUMN hsn_sac TEXT")
+            except sqlite3.OperationalError:
+                pass
 
         # 4. Update BATCHES Table
         cur.execute("PRAGMA table_info(batches)")
@@ -420,9 +434,57 @@ def update_database_schema():
                 print("Added invoice_id column to batches")
             except sqlite3.OperationalError:
                 pass
-            
+
+        # 5. Ensure stock_adjustments table schema is clean & up to date
+        cur.execute("PRAGMA table_info(stock_adjustments)")
+        sa_cols = [col[1] for col in cur.fetchall()]
+
+        if 'code' in sa_cols:
+            print("Migrating legacy stock_adjustments table schema...")
+            cur.execute("ALTER TABLE stock_adjustments RENAME TO stock_adjustments_old")
+            cur.execute("""
+                CREATE TABLE stock_adjustments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    material_code TEXT NOT NULL,
+                    operation TEXT NOT NULL,
+                    amount REAL NOT NULL,
+                    reason TEXT,
+                    before_qty REAL,
+                    after_qty REAL,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cur.execute("""
+                INSERT INTO stock_adjustments (material_code, operation, amount, reason, before_qty, after_qty, created_at)
+                SELECT 
+                    COALESCE(material_code, code, ''),
+                    COALESCE(operation, mode, 'subtract'),
+                    COALESCE(amount, qty_change, 0),
+                    reason,
+                    COALESCE(before_qty, stock_before, 0),
+                    COALESCE(after_qty, stock_after, 0),
+                    created_at
+                FROM stock_adjustments_old
+            """)
+            cur.execute("DROP TABLE stock_adjustments_old")
+            print("stock_adjustments table migrated successfully.")
+        else:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS stock_adjustments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    material_code TEXT NOT NULL,
+                    operation TEXT NOT NULL,
+                    amount REAL NOT NULL,
+                    reason TEXT,
+                    before_qty REAL,
+                    after_qty REAL,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
         conn.commit()
         print("Database schema verified.")
+
         
     except Exception as e:
         print(f"Error updating database schema: {e}")
@@ -775,9 +837,64 @@ def update_material_unit():
         conn.close()
 
 # -----------------------------
+# New Material Registration
+# -----------------------------
+@app.route("/materials/new", methods=["GET", "POST"])
+def new_material():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Get existing categories for datalist
+    cur.execute("SELECT DISTINCT category FROM materials WHERE category IS NOT NULL AND category != '' ORDER BY category")
+    categories = [r["category"] for r in cur.fetchall()]
+
+    if request.method == "POST":
+        code        = request.form.get("material_code", "").strip().upper()
+        description = request.form.get("description", "").strip()
+        category    = request.form.get("category", "").strip()
+        unit        = request.form.get("unit", "").strip()
+        reorder_lvl = request.form.get("reorder_level", "0").strip() or "0"
+
+        # Validate required fields
+        if not code or not description or not category:
+            return render_template("materials/new_material.html",
+                                   categories=categories,
+                                   error="Code, Description and Category are all required.",
+                                   form_data=request.form)
+
+        # Check for duplicate code
+        cur.execute("SELECT 1 FROM materials WHERE material_code = ? LIMIT 1", (code,))
+        if cur.fetchone():
+            return render_template("materials/new_material.html",
+                                   categories=categories,
+                                   error=f"Material code '{code}' already exists. Please use a different code.",
+                                   form_data=request.form)
+
+        today = datetime.now().strftime("%Y-%m-%d")
+        try:
+            reorder_int = int(float(reorder_lvl))
+        except Exception:
+            reorder_int = 0
+
+        cur.execute("""
+            INSERT INTO materials
+              (material_code, description, category, unit, opening_stock, quantity,
+               reorder_level, purchase_date, last_updated)
+            VALUES (?, ?, ?, ?, 0, 0, ?, ?, ?)
+        """, (code, description, category, unit, reorder_int, today, today))
+        conn.commit()
+        return redirect(url_for("material_list"))
+
+    return render_template("materials/new_material.html", categories=categories, error=None, form_data={})
+
+# -----------------------------
 # Storage (Batch Management)
 # -----------------------------
 @app.route("/storage")
+
 def storage_list():
     """List batches with Date Range and Search filters."""
     if "user" not in session:
@@ -1423,6 +1540,7 @@ def invoice_add():
 
                 category = request.form.get(f"category_{i}")
                 unit = request.form.get(f"unit_{i}")
+                hsn_sac = (request.form.get(f"hsn_sac_{i}") or "").strip()
                 reorder_level = int(request.form.get(f"reorder_level_{i}") or 0)
                 
                 # Get Lot No from form, or fallback to auto-generated batch_no
@@ -1460,24 +1578,24 @@ def invoice_add():
 
                 cur.execute("""
                     INSERT INTO invoice_items (invoice_id, material, quantity, unit, unit_price, 
-                    discount_percentage, gst_percentage, igst_percentage, item_subtotal, item_gst_value, item_igst_value, item_total, batch_no)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    discount_percentage, gst_percentage, igst_percentage, item_subtotal, item_gst_value, item_igst_value, item_total, batch_no, hsn_sac)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (new_invoice_id, material_code, quantity, unit, unit_price, discount_percentage,
-                      gst_percentage, igst_percentage, net_amount, item_gst_value, item_igst_value, item_total, item_lot_no))
+                      gst_percentage, igst_percentage, net_amount, item_gst_value, item_igst_value, item_total, item_lot_no, hsn_sac))
 
                 # Update Material Stock (Live Materials) - TARGET BY CODE AND LOT
                 cur.execute("SELECT * FROM materials WHERE material_code=? AND lot_no=?", (material_code, item_lot_no))
                 if cur.fetchone():
                     cur.execute("""
                         UPDATE materials SET description=?, quantity=quantity+?, opening_stock=opening_stock+?, 
-                        category=?, reorder_level=?, unit_price=?, purchase_date=?, expiry_date=? 
+                        category=?, reorder_level=?, unit_price=?, purchase_date=?, expiry_date=?, hsn_sac=? 
                         WHERE material_code=? AND lot_no=?
-                    """, (material_name, quantity, quantity, category, reorder_level, unit_price, item_p_date, item_e_date, material_code, item_lot_no))
+                    """, (material_name, quantity, quantity, category, reorder_level, unit_price, item_p_date, item_e_date, hsn_sac, material_code, item_lot_no))
                 else:
                     cur.execute("""
-                        INSERT INTO materials(material_code, description, category, opening_stock, quantity, unit, unit_price, purchase_date, expiry_date, lot_no, reorder_level)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (material_code, material_name, category, quantity, quantity, unit, unit_price, item_p_date, item_e_date, item_lot_no, reorder_level))
+                        INSERT INTO materials(material_code, description, category, opening_stock, quantity, unit, unit_price, purchase_date, expiry_date, lot_no, reorder_level, hsn_sac)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (material_code, material_name, category, quantity, quantity, unit, unit_price, item_p_date, item_e_date, item_lot_no, reorder_level, hsn_sac))
 
             # --- UPDATE INVOICE HEADER ---
             # Total = Rounded Subtotal + Rounded Tax Sums
@@ -1560,6 +1678,7 @@ def invoice_edit(iid):
 
                 category = request.form.get(f"category_{i}")
                 unit = request.form.get(f"unit_{i}")
+                hsn_sac = (request.form.get(f"hsn_sac_{i}") or "").strip()
                 reorder_level = int(request.form.get(f"reorder_level_{i}") or 0)
                 
                 # Get Lot No from form, or fallback to auto-generated batch_no
@@ -1591,23 +1710,23 @@ def invoice_edit(iid):
 
                 cur.execute("""
                     INSERT INTO invoice_items (invoice_id, material, quantity, unit, unit_price, 
-                    discount_percentage, gst_percentage, igst_percentage, item_subtotal, item_gst_value, item_igst_value, item_total, batch_no)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    discount_percentage, gst_percentage, igst_percentage, item_subtotal, item_gst_value, item_igst_value, item_total, batch_no, hsn_sac)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (iid, material_code, quantity, unit, unit_price, discount_percentage,
-                      gst_percentage, igst_percentage, net_amount, item_gst_value, item_igst_value, item_total, item_lot_no))
+                      gst_percentage, igst_percentage, net_amount, item_gst_value, item_igst_value, item_total, item_lot_no, hsn_sac))
 
                 cur.execute("SELECT * FROM materials WHERE material_code=? AND lot_no=?", (material_code, item_lot_no))
                 if cur.fetchone():
                     cur.execute("""
                         UPDATE materials SET description=?, quantity=quantity+?, opening_stock=opening_stock+?, 
-                        category=?, reorder_level=?, unit_price=?, purchase_date=?, expiry_date=? 
+                        category=?, reorder_level=?, unit_price=?, purchase_date=?, expiry_date=?, hsn_sac=? 
                         WHERE material_code=? AND lot_no=?
-                    """, (material_name, quantity, quantity, category, reorder_level, unit_price, item_p_date, item_e_date, material_code, item_lot_no))
+                    """, (material_name, quantity, quantity, category, reorder_level, unit_price, item_p_date, item_e_date, hsn_sac, material_code, item_lot_no))
                 else:
                     cur.execute("""
-                        INSERT INTO materials(material_code, description, category, opening_stock, quantity, unit, unit_price, purchase_date, expiry_date, lot_no, reorder_level)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (material_code, material_name, category, quantity, quantity, unit, unit_price, item_p_date, item_e_date, item_lot_no, reorder_level))
+                        INSERT INTO materials(material_code, description, category, opening_stock, quantity, unit, unit_price, purchase_date, expiry_date, lot_no, reorder_level, hsn_sac)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (material_code, material_name, category, quantity, quantity, unit, unit_price, item_p_date, item_e_date, item_lot_no, reorder_level, hsn_sac))
 
             # Update Header
             final_subtotal_display = round2(calc_subtotal)
@@ -1630,7 +1749,8 @@ def invoice_edit(iid):
     if not invoice: return redirect(url_for("invoice_list"))
 
     cur.execute("""
-        SELECT ii.*, m.category, COALESCE(m.description, ii.material) AS description, m.reorder_level, m.purchase_date, m.expiry_date
+        SELECT ii.*, m.category, COALESCE(m.description, ii.material) AS description, m.reorder_level, m.purchase_date, m.expiry_date,
+               COALESCE(ii.hsn_sac, m.hsn_sac, '') AS hsn_sac
         FROM invoice_items AS ii
         LEFT JOIN materials AS m ON ii.material = m.material_code
         WHERE ii.invoice_id = ?
@@ -1665,7 +1785,7 @@ def autocomplete_materials():
     results = []
     for row in cur.fetchall():
         results.append({
-            'label': f"{row['material_code']} - {row['description']}",  # What user sees in the dropdown
+                    'label': f"{row['material_code']} - {row['description']}",  # What user sees in the dropdown
             'value': row['material_code'],       # What fills the input box
             'description': row['description'],   # Data to auto-fill
             'category': row['category'],
@@ -1677,11 +1797,11 @@ def autocomplete_materials():
     return jsonify(results)
 
 # -----------------------------
-# API: Lookup Material Code by Description (for OCR auto-fill)
+# API: Lookup Material Code by Description (for OCR & live auto-fill)
 # -----------------------------
 @app.route('/api/materials/lookup_by_description')
 def lookup_material_by_description():
-    """Given a product name (from OCR), find the best matching material code from the factory DB."""
+    """Given a product name (from OCR or manual input), find matching material code and category from the factory DB."""
     if "user" not in session:
         return jsonify({"found": False})
     
@@ -1692,9 +1812,14 @@ def lookup_material_by_description():
     conn = get_db()
     cur = conn.cursor()
     
-    # 1. Exact match first (case-insensitive)
-    cur.execute("""
-        SELECT material_code, description, category, unit, reorder_level
+    # Check if hsn_sac column exists in materials
+    cur.execute("PRAGMA table_info(materials)")
+    mat_cols = [c[1] for c in cur.fetchall()]
+    hsn_col_sql = "hsn_sac" if "hsn_sac" in mat_cols else "'' AS hsn_sac"
+    
+    # 1. Exact match (case-insensitive)
+    cur.execute(f"""
+        SELECT material_code, description, category, unit, reorder_level, {hsn_col_sql}
         FROM materials
         WHERE description = ? COLLATE NOCASE
         GROUP BY material_code
@@ -1703,27 +1828,60 @@ def lookup_material_by_description():
     """, (name,))
     rows = cur.fetchall()
     
-    # 2. If no exact match, try LIKE (partial match)
+    # 2. Prefix match
     if not rows:
-        search_words = name.split()
-        best_term = max(search_words, key=len) if search_words else name
-        cur.execute("""
-            SELECT material_code, description, category, unit, reorder_level
+        cur.execute(f"""
+            SELECT material_code, description, category, unit, reorder_level, {hsn_col_sql}
+            FROM materials
+            WHERE description LIKE ? COLLATE NOCASE OR ? LIKE (description || '%') COLLATE NOCASE
+            GROUP BY material_code
+            ORDER BY material_code
+            LIMIT 5
+        """, (f"{name}%", name))
+        rows = cur.fetchall()
+
+    # 3. Substring match
+    if not rows and len(name) >= 3:
+        cur.execute(f"""
+            SELECT material_code, description, category, unit, reorder_level, {hsn_col_sql}
             FROM materials
             WHERE description LIKE ? COLLATE NOCASE
             GROUP BY material_code
             ORDER BY material_code
             LIMIT 5
-        """, (f"%{best_term}%",))
+        """, (f"%{name}%",))
         rows = cur.fetchall()
+
+    # 4. Multi-word search
+    if not rows:
+        import re as py_re
+        words = [w for w in py_re.split(r"[\s\-_]+", name) if len(w) >= 3 and not w.isdigit()]
+        if words:
+            best_word = max(words, key=len)
+            cur.execute(f"""
+                SELECT material_code, description, category, unit, reorder_level, {hsn_col_sql}
+                FROM materials
+                WHERE description LIKE ? COLLATE NOCASE
+                GROUP BY material_code
+                ORDER BY material_code
+                LIMIT 5
+            """, (f"%{best_word}%",))
+            rows = cur.fetchall()
     
     conn.close()
     
     if not rows:
         return jsonify({"found": False, "name": name})
     
-    # Return all matches so user can pick if multiple exist
-    matches = [{"code": r["material_code"], "description": r["description"], "category": r["category"], "unit": r["unit"]} for r in rows]
+    matches = [{
+        "code": r["material_code"],
+        "description": r["description"],
+        "category": r["category"],
+        "unit": r["unit"],
+        "reorder_level": r["reorder_level"],
+        "hsn_sac": r["hsn_sac"] if "hsn_sac" in r.keys() and r["hsn_sac"] else ""
+    } for r in rows]
+    
     best = matches[0]
     
     return jsonify({
@@ -1732,7 +1890,71 @@ def lookup_material_by_description():
         "description": best["description"],
         "category": best["category"],
         "unit": best["unit"],
+        "reorder_level": best["reorder_level"],
+        "hsn_sac": best["hsn_sac"],
         "all_matches": matches
+    })
+
+# -----------------------------
+# API: Generate Next Material Code
+# -----------------------------
+@app.route('/api/materials/generate_next_code')
+def generate_next_material_code():
+    """Generates the next unique sequential material code for new items."""
+    if "user" not in session:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+    
+    category = request.args.get('category', '').strip().lower()
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    min_range = 900
+    max_range = 999
+    
+    if "tea bag" in category:
+        min_range, max_range = 800, 899
+    elif "coffee" in category:
+        min_range, max_range = 700, 799
+    elif "oil" in category:
+        min_range, max_range = 600, 699
+    elif "bakery" in category or "vakery" in category:
+        min_range, max_range = 500, 599
+    elif "choc" in category:
+        min_range, max_range = 400, 499
+    elif "dry fruit" in category or "nut" in category:
+        min_range, max_range = 300, 399
+    elif "spice" in category:
+        min_range, max_range = 200, 299
+    elif "tea" in category:
+        min_range, max_range = 100, 199
+    else:
+        min_range, max_range = 900, 999
+
+    cur.execute("""
+        SELECT material_code FROM materials 
+        WHERE CAST(material_code AS INTEGER) >= ? AND CAST(material_code AS INTEGER) <= ?
+        ORDER BY CAST(material_code AS INTEGER) DESC LIMIT 1
+    """, (min_range, max_range))
+    row = cur.fetchone()
+    
+    if row and row['material_code'] and str(row['material_code']).isdigit():
+        next_code = str(int(row['material_code']) + 1)
+    else:
+        next_code = str(min_range)
+        
+    # Ensure next_code is unique
+    while True:
+        cur.execute("SELECT 1 FROM materials WHERE material_code = ?", (next_code,))
+        if not cur.fetchone():
+            break
+        next_code = str(int(next_code) + 1)
+        
+    conn.close()
+    return jsonify({
+        "success": True,
+        "code": next_code,
+        "category": category if category else "packing"
     })
 
 # -----------------------------
@@ -1795,6 +2017,7 @@ def invoice_view(iid):
             ii.id,
             ii.material AS code, 
             COALESCE(m.description, ii.material) AS name, 
+            COALESCE(ii.hsn_sac, m.hsn_sac, '') AS hsn,
             ii.quantity, 
             ii.unit, 
             ii.unit_price, 
@@ -3152,6 +3375,152 @@ def warehouse_categories():
 
 
 # --- REPLACE THE BOTTOM OF MMS.py WITH THIS ---
+
+# -----------------------------
+# Stock Adjustment
+# -----------------------------
+@app.route("/stock/adjustment")
+def stock_adjustment():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT category FROM materials WHERE category IS NOT NULL AND category != '' ORDER BY category")
+    categories = [r["category"] for r in cur.fetchall()]
+
+    # Simple fetch — no JOIN to avoid issues if stock_adjustments schema differs
+    try:
+        cur.execute("SELECT * FROM stock_adjustments ORDER BY created_at DESC LIMIT 30")
+        rows = cur.fetchall()
+    except Exception:
+        rows = []
+
+    # Enrich each row with description + unit from materials (Python-side lookup)
+    history = []
+    for row in rows:
+        row_dict = dict(row)
+        mat_code = row_dict.get("material_code", "")
+        if mat_code:
+            cur.execute("""SELECT description, unit FROM materials
+                           WHERE material_code = ? ORDER BY id DESC LIMIT 1""", (mat_code,))
+            mat = cur.fetchone()
+            row_dict["description"] = mat["description"] if mat else ""
+            row_dict["unit"]        = mat["unit"] if mat else ""
+        else:
+            row_dict["description"] = ""
+            row_dict["unit"]        = ""
+        row_dict["amount"]     = float(row_dict.get("amount") or 0)
+        row_dict["before_qty"] = float(row_dict.get("before_qty") or 0)
+        row_dict["after_qty"]  = float(row_dict.get("after_qty") or 0)
+        history.append(row_dict)
+
+    return render_template("materials/stock_adjustment.html", categories=categories, history=history)
+
+@app.route("/api/stock/search")
+def api_stock_search():
+    if "user" not in session:
+        return jsonify([])
+    term = request.args.get("q", "").strip()
+    category = request.args.get("category", "").strip()
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    conditions = ["1=1"]
+    params = []
+
+    if term:
+        conditions.append("(material_code LIKE ? OR description LIKE ?)")
+        params.extend([f"%{term}%", f"%{term}%"])
+
+    if category:
+        conditions.append("category = ?")
+        params.append(category)
+
+    where = " AND ".join(conditions)
+    cur.execute(f"""
+        SELECT material_code, description, category, unit,
+               SUM(quantity) as total_quantity, reorder_level
+        FROM materials
+        WHERE {where}
+        GROUP BY material_code
+        ORDER BY material_code
+        LIMIT 25
+    """, tuple(params))
+
+    rows = cur.fetchall()
+    results = [{
+        "code": r["material_code"],
+        "description": r["description"],
+        "category": r["category"],
+        "unit": r["unit"],
+        "quantity": round(r["total_quantity"] or 0, 3),
+        "reorder_level": r["reorder_level"]
+    } for r in rows]
+
+    return jsonify(results)
+
+@app.route("/api/stock/adjust", methods=["POST"])
+def api_stock_adjust():
+    if "user" not in session:
+        return jsonify({"success": False, "error": "Not logged in"}), 401
+    data = request.get_json()
+    material_code = (data.get("material_code") or "").strip()
+    operation = data.get("operation", "add")  # "add" or "subtract"
+    try:
+        amount = float(data.get("amount", 0))
+    except Exception:
+        return jsonify({"success": False, "error": "Invalid amount"}), 400
+    reason = (data.get("reason") or "Manual adjustment").strip()
+
+    if not material_code or amount <= 0:
+        return jsonify({"success": False, "error": "Missing material code or invalid amount"}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT SUM(quantity) as total FROM materials WHERE material_code = ?", (material_code,))
+    row = cur.fetchone()
+    if not row or row["total"] is None:
+        return jsonify({"success": False, "error": "Material not found"}), 404
+
+    current_total = row["total"] or 0
+
+    if operation == "subtract":
+        if amount > current_total:
+            return jsonify({"success": False, "error": f"Cannot subtract {amount} — only {current_total:.3f} in stock"}), 400
+        # FIFO: consume from oldest lots first
+        remaining = amount
+        cur.execute("SELECT id, quantity FROM materials WHERE material_code = ? AND quantity > 0 ORDER BY id ASC", (material_code,))
+        lots = cur.fetchall()
+        for lot in lots:
+            if remaining <= 0:
+                break
+            if lot["quantity"] <= remaining:
+                cur.execute("UPDATE materials SET quantity = 0 WHERE id = ?", (lot["id"],))
+                remaining -= lot["quantity"]
+            else:
+                cur.execute("UPDATE materials SET quantity = quantity - ? WHERE id = ?", (remaining, lot["id"]))
+                remaining = 0
+        new_total = current_total - amount
+    else:
+        # Add to latest lot
+        cur.execute("SELECT id FROM materials WHERE material_code = ? ORDER BY id DESC LIMIT 1", (material_code,))
+        latest = cur.fetchone()
+        if latest:
+            cur.execute("UPDATE materials SET quantity = quantity + ? WHERE id = ?", (amount, latest["id"]))
+        new_total = current_total + amount
+
+    # Log the adjustment
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute("""
+        INSERT INTO stock_adjustments (material_code, operation, amount, reason, before_qty, after_qty, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (material_code, operation, amount, reason, current_total, new_total, now_str))
+
+    conn.commit()
+    return jsonify({"success": True, "before": round(current_total, 3), "after": round(new_total, 3)})
+
 
 def run_flask():
     # Only run the server here

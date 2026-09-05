@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -465,6 +465,8 @@
     <a href="/invoices">Invoices</a>
     <a href="/transfers">Transfers</a>
     <a href="/materials">Materials</a>
+    <a href="/materials/master">Materials Master</a>
+    <a href="/materials/new">New Material</a>
     <a href="/storage">Storage</a>
     <a href="/vendors">Vendors</a>
     <a href="/dispatch">Dispatch</a>
@@ -500,6 +502,7 @@
         <tr>
           <th class="text-left">Code</th>
           <th class="text-left">Name</th>
+          <th class="text-left">HSN/SAC</th>
           <th class="text-left">Lot Number</th>
           <th class="text-right">Qty</th>
           <th class="text-center">Unit</th>
@@ -516,6 +519,7 @@
         <tr>
           <td class="text-left">{{ item.code }}</td>
           <td class="text-left">{{ item.name }}</td>
+          <td class="text-left">{{ item.hsn if item.hsn else '-' }}</td>
           <td class="text-left">{{ item.batch_no }}</td>
           <td class="text-right">
             {% if item.unit in ['kg','litre'] %}
@@ -620,23 +624,23 @@
           </div>
           <div class="form-group">
             <label>Quantity</label>
-            <input type="number" step="0.001" name="quantity" placeholder="e.g. 10">
+            <input type="number" step="any" name="quantity" placeholder="e.g. 10">
           </div>
           <div class="form-group">
             <label>Unit Price</label>
-            <input type="number" step="0.01" name="unit_price" id="unit_price">
+            <input type="number" step="any" name="unit_price" id="unit_price">
           </div>
           <div class="form-group">
             <label>Discount %</label>
-            <input type="number" step="0.01" name="discount" value="0">
+            <input type="number" step="any" name="discount" value="0">
           </div>
           <div class="form-group">
             <label>GST %</label>
-            <input type="number" step="0.01" name="gst" value="0">
+            <input type="number" step="any" name="gst" value="0">
           </div>
           <div class="form-group">
             <label>IGST %</label>
-            <input type="number" step="0.01" name="igst" value="0">
+            <input type="number" step="any" name="igst" value="0">
           </div>
           <div class="form-group">
             <label>Lot Number</label>

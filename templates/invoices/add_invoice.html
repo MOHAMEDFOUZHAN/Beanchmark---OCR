@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -313,9 +313,12 @@
     <a href="/invoices">Invoices</a>
     <a href="/transfers">Transfers</a>
     <a href="/materials">Materials</a>
+    <a href="/materials/master">Materials Master</a>
+    <a href="/materials/new">New Material</a>
     <a href="/storage">Storage</a>
     <a href="/vendors">Vendors</a>
     <a href="/dispatch">Dispatch</a>
+    <a href="/stock/adjustment">Stock Adjustment</a>
     <a href="/warehouse/categories">Shelf Mapping</a>
     <a href="/reports/utilization">MUR</a>
     <a href="/reports">Reports</a>
@@ -384,7 +387,7 @@
           <div><label>Total GST (CGST+SGST)</label><input id="total_gst" name="total_gst" readonly></div>
           <div><label>CGST Value</label><input id="cgst_percent" name="cgst_percent" readonly></div>
           <div><label>SGST Value</label><input id="sgst_percent" name="sgst_percent" readonly></div>
-          <div><label>Round Off Value</label><input type="number" step="0.01" id="round_off" name="round_off" value="0"
+          <div><label>Round Off Value</label><input type="number" step="any" id="round_off" name="round_off" value="0"
               oninput="updateFinalTotal()"></div>
           <div><label>Final Total</label><input id="final_total" name="final_total" readonly></div>
         </div>
@@ -424,9 +427,19 @@
           div.innerHTML = `
             <h3>Material ${i} Details</h3>
             <div class="form-grid">
-                <div><label>Material Code</label><input type="text" name="material_code_${i}" id="material_code_${i}" placeholder="Type to search..." required></div>
-              <div><label>Description</label><input type="text" name="material_name_${i}" id="material_name_${i}" required></div>
-              <div><label>Category</label><input type="text" name="category_${i}" id="category_${i}"></div>
+              <div>
+                <label>Material Code</label>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <input type="text" name="material_code_${i}" id="material_code_${i}" placeholder="Type or auto-fetch..." required style="flex:1;">
+                  <button type="button" id="btn_gen_code_${i}" onclick="generateCodeForSection(${i})" style="display:none; padding:7px 10px; font-size:0.8rem; background:#0284c7; color:#fff; border:none; border-radius:5px; cursor:pointer; white-space:nowrap; font-weight:600;" title="Generate new sequential code">✨ Gen Code</button>
+                </div>
+                <div id="code_status_${i}" style="font-size:0.75rem; margin-top:3px; display:none;"></div>
+              </div>
+              <div>
+                <label>Description</label>
+                <input type="text" name="material_name_${i}" id="material_name_${i}" oninput="handleDescriptionChange(${i})" onchange="handleDescriptionChange(${i})" placeholder="Enter material name..." required>
+              </div>
+              <div><label>Category</label><input type="text" name="category_${i}" id="category_${i}" placeholder="e.g. tea, packing, spice..."></div>
               <div><label>Base Unit</label>
                 <select name="unit_${i}" id="unit_${i}">
                   <option value="kg">Kg</option>
@@ -446,17 +459,17 @@
                 </select>
               </div>
               <div><label>Quantity</label>
-                <input type="number" step="0.001" name="quantity_${i}" id="quantity_${i}" placeholder="e.g. 27.52" oninput="recalculateTotals()" required>
+                <input type="number" step="any" name="quantity_${i}" id="quantity_${i}" placeholder="e.g. 27.52" oninput="recalculateTotals()" required>
               </div>
-              <div><label>Unit Price</label><input type="number" step="0.01" name="unit_price_${i}" id="unit_price_${i}" oninput="recalculateTotals()" ></div>
-              <div><label>Discount %</label><input type="number" step="0.01" name="discount_${i}" value="0" oninput="recalculateTotals()"></div>
-              <div><label>GST %</label><input type="number" step="0.01" name="gst_${i}" value="0" oninput="recalculateTotals()"></div>
-              <div><label>GST Value</label><input type="number" step="0.01" name="gst_value_${i}" id="gst_value_${i}" readonly></div>
-              <div><label>IGST %</label><input type="number" step="0.01" name="igst_${i}" value="0" oninput="recalculateTotals()"></div>
-              <div><label>IGST Value</label><input type="number" step="0.01" name="igst_value_${i}" id="igst_value_${i}" readonly></div>
+              <div><label>Unit Price</label><input type="number" step="any" name="unit_price_${i}" id="unit_price_${i}" oninput="recalculateTotals()" ></div>
+              <div><label>Discount %</label><input type="number" step="any" name="discount_${i}" value="0" oninput="recalculateTotals()"></div>
+              <div><label>GST %</label><input type="number" step="any" name="gst_${i}" value="0" oninput="recalculateTotals()"></div>
+              <div><label>GST Value</label><input type="number" step="any" name="gst_value_${i}" id="gst_value_${i}" readonly></div>
+              <div><label>IGST %</label><input type="number" step="any" name="igst_${i}" value="0" oninput="recalculateTotals()"></div>
+              <div><label>IGST Value</label><input type="number" step="any" name="igst_value_${i}" id="igst_value_${i}" readonly></div>
               <div><label>Purchase Date</label><input type="date" name="purchase_date_${i}" id="purchase_date_${i}"></div>
               <div><label>Expiry Date</label><input type="date" name="expiry_date_${i}" id="expiry_date_${i}"></div>
-              <div><label>Reorder Level</label><input type="number" name="reorder_level_${i}" id="reorder_level_${i}" placeholder="e.g. 50"></div>
+              <div><label>Reorder Level</label><input type="number" step="any" name="reorder_level_${i}" id="reorder_level_${i}" placeholder="e.g. 50"></div>
               <div><label>Lot Number</label><input type="text" name="lot_no_${i}" id="lot_no_${i}" placeholder="Auto-fills or enter new"></div>
             </div>`;
           container.appendChild(div);
@@ -470,6 +483,100 @@
         }
       }
       recalculateTotals();
+    }
+
+    let lookupTimeouts = {};
+
+    function handleDescriptionChange(i) {
+      const nameInput = document.getElementById(`material_name_${i}`);
+      const codeInput = document.getElementById(`material_code_${i}`);
+      const catInput = document.getElementById(`category_${i}`);
+      const unitSelect = document.getElementById(`unit_${i}`);
+      const genBtn = document.getElementById(`btn_gen_code_${i}`);
+      const statusDiv = document.getElementById(`code_status_${i}`);
+
+      if (!nameInput) return;
+      const name = nameInput.value.trim();
+
+      if (!name) {
+        if (statusDiv) statusDiv.style.display = 'none';
+        if (genBtn) genBtn.style.display = 'none';
+        return;
+      }
+
+      if (lookupTimeouts[i]) clearTimeout(lookupTimeouts[i]);
+
+      lookupTimeouts[i] = setTimeout(() => {
+        fetch(`/api/materials/lookup_by_description?name=${encodeURIComponent(name)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.found) {
+              if (codeInput) {
+                codeInput.value = data.code;
+                codeInput.style.borderColor = '#16a34a';
+                codeInput.title = `Matched: ${data.description}`;
+              }
+              if (catInput && data.category && (!catInput.value || catInput.value === 'packing')) {
+                catInput.value = data.category;
+              }
+              if (unitSelect && data.unit) {
+                const u = data.unit.toLowerCase();
+                if (u === 'pkt' || u === 'packet') unitSelect.value = 'packet';
+                else if (u === 'nos' || u === 'pcs') unitSelect.value = 'pcs';
+                else unitSelect.value = data.unit;
+              }
+              if (genBtn) genBtn.style.display = 'none';
+              if (statusDiv) {
+                statusDiv.style.display = 'block';
+                statusDiv.style.color = '#16a34a';
+                statusDiv.innerHTML = `✓ Found in DB (Code: <b>${data.code}</b>)`;
+              }
+            } else {
+              if (statusDiv) {
+                statusDiv.style.display = 'block';
+                statusDiv.style.color = '#d97706';
+                statusDiv.innerHTML = `⚠ New Item not in DB`;
+              }
+              if (genBtn) {
+                genBtn.style.display = 'inline-block';
+              }
+              if (codeInput && !codeInput.value) {
+                codeInput.placeholder = 'Click Gen Code or enter';
+                codeInput.style.borderColor = '#f59e0b';
+              }
+            }
+          })
+          .catch(err => console.warn('Lookup error:', err));
+      }, 300);
+    }
+
+    function generateCodeForSection(i) {
+      const catInput = document.getElementById(`category_${i}`);
+      const codeInput = document.getElementById(`material_code_${i}`);
+      const genBtn = document.getElementById(`btn_gen_code_${i}`);
+      const statusDiv = document.getElementById(`code_status_${i}`);
+      const cat = catInput ? catInput.value.trim() : '';
+
+      fetch(`/api/materials/generate_next_code?category=${encodeURIComponent(cat)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.code) {
+            if (codeInput) {
+              codeInput.value = data.code;
+              codeInput.style.borderColor = '#0284c7';
+            }
+            if (catInput && !catInput.value && data.category) {
+              catInput.value = data.category;
+            }
+            if (genBtn) genBtn.style.display = 'none';
+            if (statusDiv) {
+              statusDiv.style.display = 'block';
+              statusDiv.style.color = '#0284c7';
+              statusDiv.innerHTML = `✨ Generated Code: <b>${data.code}</b>`;
+            }
+          }
+        })
+        .catch(err => console.error('Code generation error:', err));
     }
 
     function initAutocomplete(i) {
@@ -534,7 +641,6 @@
       document.getElementById("total_igst").value = totalIgst.toFixed(2);
 
       // Grand Total = Rounded(Subtotal) + Total Rounded Tax
-      // This matches the visual calculation on the screen
       const finalSubtotal = round2(subtotal);
       const calculatedGrandTotal = finalSubtotal + totalGst + totalIgst;
 
@@ -549,10 +655,13 @@
     function updateFinalTotal() {
       const grandTotal = parseFloat(document.getElementById("grand_total").value) || 0;
       const roundOff = parseFloat(document.getElementById("round_off").value) || 0;
-      document.getElementById("final_total").value = (grandTotal + roundOff).toFixed(2);
+      const finalTotal = round2(grandTotal + roundOff);
+      document.getElementById("final_total").value = finalTotal.toFixed(2);
     }
 
-    // ===== Smart OCR Invoice Scanning & Auto-Fill =====
+    // -------------------------------------------------------------
+    // OCR Auto-Fill Trigger
+    // -------------------------------------------------------------
     function handleInvoiceFileUpload(file) {
       if (!file) return;
 
@@ -563,9 +672,9 @@
 
       statusBadge.className = 'ocr-badge ocr-badge-processing';
       statusBadge.innerText = 'Scanning...';
-      dropZone.style.opacity = '0.5';
       loading.style.display = 'flex';
       successMsg.style.display = 'none';
+      dropZone.style.opacity = '0.5';
 
       const formData = new FormData();
       formData.append('invoice_file', file);
@@ -596,7 +705,6 @@
             noOfItemsInput.value = data.items.length;
             generateMaterialSections();
 
-            // ✅ Fallback average IGST rate (only used if per-item rate is 0)
             let avgIgstRate = 0;
             if (parseFloat(data.total_igst) > 0 && parseFloat(data.subtotal) > 0) {
               avgIgstRate = Math.round((parseFloat(data.total_igst) / parseFloat(data.subtotal)) * 100);
@@ -605,71 +713,37 @@
             data.items.forEach((item, idx) => {
               const i = idx + 1;
 
-              // Fill description first
               fillAndHighlight(`#material_name_${i}`, item.name);
               if (item.quantity) fillAndHighlight(`#quantity_${i}`, item.quantity);
               if (item.unit_price) fillAndHighlight(`#unit_price_${i}`, item.unit_price);
               if (item.unit) {
                 const unitSelect = document.getElementById(`unit_${i}`);
-                if (unitSelect) unitSelect.value = item.unit;
-              }
-
-              // ✅ Use per-item IGST % (exact from invoice), fall back to average only if 0
-              const igstInput = document.querySelector(`[name='igst_${i}']`);
-              if (igstInput) {
-                const perItemIgst = parseFloat(item.igst_percent) || 0;
-                const perItemGst  = parseFloat(item.gst_percent)  || 0;
-                if (perItemIgst > 0) {
-                  igstInput.value = perItemIgst;           // ✅ Correct per-item IGST
-                } else if (avgIgstRate > 0) {
-                  igstInput.value = avgIgstRate;           // Fallback average
+                if (unitSelect) {
+                  const u = item.unit.toLowerCase();
+                  if (u === 'pkt' || u === 'packet') unitSelect.value = 'packet';
+                  else if (u === 'nos' || u === 'pcs') unitSelect.value = 'pcs';
+                  else if (u === 'roll') unitSelect.value = 'roll';
+                  else if (u === 'box') unitSelect.value = 'box';
+                  else if (u === 'tin') unitSelect.value = 'tin';
+                  else if (u === 'litre' || u === 'ltr') unitSelect.value = 'litre';
+                  else if (u === 'kg') unitSelect.value = 'kg';
+                  else unitSelect.value = item.unit;
                 }
-                // Fill GST % too if present
-                const gstInput = document.querySelector(`[name='gst_${i}']`);
-                if (gstInput && perItemGst > 0) gstInput.value = perItemGst;
               }
 
-              // ✅ AUTO LOOKUP MATERIAL CODE from factory database
-              if (item.name) {
-                fetch(`/api/materials/lookup_by_description?name=${encodeURIComponent(item.name)}`)
-                  .then(r => r.json())
-                  .then(match => {
-                    const codeInput = document.getElementById(`material_code_${i}`);
-                    const nameInput = document.getElementById(`material_name_${i}`);
-                    const catInput = document.getElementById(`category_${i}`);
-                    const unitSel = document.getElementById(`unit_${i}`);
+              const perItemGst = parseFloat(item.gst_percent) || 0;
+              const perItemIgst = parseFloat(item.igst_percent) || 0;
+              const gstInput = document.querySelector(`[name='gst_${i}']`);
+              const igstInput = document.querySelector(`[name='igst_${i}']`);
 
-                    if (match.found) {
-                      // Single match — fill it directly
-                      if (match.all_matches.length === 1) {
-                        fillAndHighlight(`#material_code_${i}`, match.code);
-                        if (nameInput && !nameInput.value) fillAndHighlight(`#material_name_${i}`, match.description);
-                        if (catInput && !catInput.value) fillAndHighlight(`#category_${i}`, match.category);
-                        if (unitSel && match.unit) unitSel.value = match.unit;
-                      } else {
-                        // Multiple matches — fill best match, show options as tooltip
-                        fillAndHighlight(`#material_code_${i}`, match.code);
-                        if (catInput && !catInput.value) fillAndHighlight(`#category_${i}`, match.category);
-                        if (unitSel && match.unit) unitSel.value = match.unit;
-
-                        // Show a notice that multiple codes exist
-                        const options = match.all_matches.map(m => `${m.code} - ${m.description}`).join('\n');
-                        if (codeInput) {
-                          codeInput.title = `Multiple matches found:\n${options}\n\nAuto-selected: ${match.code}`;
-                          codeInput.style.borderColor = '#f59e0b';
-                        }
-                      }
-                    } else {
-                      // Not found in DB — highlight in red, let user enter manually
-                      if (codeInput) {
-                        codeInput.placeholder = '⚠ New item – enter code';
-                        codeInput.style.borderColor = '#ef4444';
-                        codeInput.title = `"${item.name}" not found in factory database. Please enter a new code manually.`;
-                      }
-                    }
-                  })
-                  .catch(e => console.warn('Code lookup failed:', e));
+              if (gstInput && perItemGst > 0) gstInput.value = perItemGst;
+              if (igstInput) {
+                if (perItemIgst > 0) igstInput.value = perItemIgst;
+                else if (avgIgstRate > 0) igstInput.value = avgIgstRate;
               }
+
+              // Trigger auto-lookup for material code
+              handleDescriptionChange(i);
             });
 
             recalculateTotals();

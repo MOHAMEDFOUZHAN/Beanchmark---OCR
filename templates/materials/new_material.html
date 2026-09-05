@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>New Material - MMS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #E6EDF6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .site-header {
+      background-color: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,.25);
+    }
+    .logo-container { display: flex; align-items: center; gap: 15px; }
+    .logo-container img { height: 45px; width: 45px; border-radius: 8px; background: #fff; }
+    .logo-container h1 { font-size: 22px; color: white; }
+    .site-header a { color: white; text-decoration: none; font-weight: bold; }
+    nav {
+      background-color: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    nav a { color: white; text-decoration: none; padding: 12px 18px; display: inline-block; }
+    nav a:hover { background-color: #0C294B; }
+    nav a.active { background-color: #0C294B; font-weight: bold; border-bottom: 3px solid white; }
+    main { flex: 1; padding: 32px 20px; }
+
+    .form-card {
+      max-width: 680px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.1);
+      overflow: hidden;
+    }
+    .form-card-header {
+      background: linear-gradient(135deg, #0C294B 0%, #1a4a7a 100%);
+      color: white;
+      padding: 24px 28px;
+    }
+    .form-card-header h2 { font-size: 20px; font-weight: bold; }
+    .form-card-header p { font-size: 13px; opacity: .75; margin-top: 4px; }
+    .form-body { padding: 28px; }
+
+    .error-box {
+      background: #fdecea;
+      border: 1.5px solid #e74c3c;
+      border-radius: 8px;
+      color: #c0392b;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-row { margin-bottom: 18px; }
+    .form-row label {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      color: #0C294B;
+      margin-bottom: 6px;
+    }
+    .required-star { color: #e74c3c; margin-left: 2px; }
+    .input-wrap { position: relative; display: flex; gap: 8px; align-items: center; }
+    input[type="text"], input[type="number"], select {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1.5px solid #c9d7e8;
+      border-radius: 7px;
+      font-size: 14px;
+      color: #222;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      background: #f8fafd;
+      width: 100%;
+    }
+    input:focus, select:focus {
+      border-color: #0C294B;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(12,41,75,.08);
+    }
+    .hint { font-size: 12px; color: #888; margin-top: 5px; }
+
+    .btn-auto {
+      white-space: nowrap;
+      padding: 10px 14px;
+      background: #1a7a3b;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-auto:hover { background: #155f2e; }
+
+    .form-divider { border: none; border-top: 1.5px solid #E6EDF6; margin: 22px 0; }
+
+    .btn-row { display: flex; gap: 12px; margin-top: 6px; }
+    .btn-save {
+      flex: 1;
+      padding: 12px;
+      background: #0C294B;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-save:hover { background: #1a4a7a; }
+    .btn-cancel {
+      padding: 12px 22px;
+      background: #f0f4fa;
+      color: #0C294B;
+      border: 1.5px solid #c9d7e8;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .btn-cancel:hover { background: #e0e8f5; }
+
+    .code-badge {
+      display: none;
+      background: #e8f7ef;
+      color: #1a7a3b;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>New Material</h1>
+    </div>
+    <a href="/logout">Logout</a>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/materials/master">Materials Master</a>
+    <a href="/materials/new" class="active">New Material</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/stock/adjustment">Stock Adjustment</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <main>
+    <div class="form-card">
+      <div class="form-card-header">
+        <h2>&#10133; Register New Material</h2>
+        <p>Add a new product to the system. It will appear in all dropdowns once saved.</p>
+      </div>
+
+      <div class="form-body">
+
+        {% if error %}
+        <div class="error-box">&#9888; {{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/materials/new">
+
+          <!-- Material Code -->
+          <div class="form-row">
+            <label for="material_code">Material Code <span class="required-star">*</span></label>
+            <div class="input-wrap">
+              <input type="text" id="material_code" name="material_code"
+                     placeholder="e.g. 101 or TEA-01"
+                     value="{{ form_data.get('material_code', '') }}"
+                     required autocomplete="off">
+              <button type="button" class="btn-auto" id="btn-gen" onclick="generateCode()">
+                &#9889; Auto Code
+              </button>
+            </div>
+            <div class="hint" id="code-hint">Enter manually or click Auto Code after selecting a category.</div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-row">
+            <label for="description">Description <span class="required-star">*</span></label>
+            <input type="text" id="description" name="description"
+                   placeholder="e.g. Cashew Kernel W240"
+                   value="{{ form_data.get('description', '') }}"
+                   required>
+          </div>
+
+          <!-- Category -->
+          <div class="form-row">
+            <label for="category">Category <span class="required-star">*</span></label>
+            <input type="text" id="category" name="category"
+                   list="category-list"
+                   placeholder="Select or type a category..."
+                   value="{{ form_data.get('category', '') }}"
+                   required autocomplete="off">
+            <datalist id="category-list">
+              {% for cat in categories %}
+              <option value="{{ cat }}">
+              {% endfor %}
+            </datalist>
+            <div class="hint">Choose an existing category or type a new one.</div>
+          </div>
+
+          <hr class="form-divider">
+
+          <!-- Unit -->
+          <div class="form-row">
+            <label for="unit">Unit of Measure</label>
+            <input type="text" id="unit" name="unit"
+                   list="unit-list"
+                   placeholder="e.g. KG, Nos, Ltr, Pkt..."
+                   value="{{ form_data.get('unit', '') }}">
+            <datalist id="unit-list">
+              <option value="KG">
+              <option value="Nos">
+              <option value="Ltr">
+              <option value="Pkt">
+              <option value="Box">
+              <option value="Gm">
+              <option value="ML">
+              <option value="Set">
+            </datalist>
+          </div>
+
+          <!-- Reorder Level -->
+          <div class="form-row">
+            <label for="reorder_level">Reorder Level</label>
+            <input type="number" id="reorder_level" name="reorder_level"
+                   min="0" step="1" placeholder="Minimum stock before alert (default 0)"
+                   value="{{ form_data.get('reorder_level', '') }}">
+          </div>
+
+          <div class="btn-row">
+            <button type="submit" class="btn-save">&#10003; Save Material</button>
+            <a href="/materials" class="btn-cancel">Cancel</a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function generateCode() {
+      var cat = document.getElementById('category').value.trim();
+      var btn = document.getElementById('btn-gen');
+      btn.textContent = 'Generating...';
+      btn.disabled = true;
+      fetch('/api/materials/generate_next_code?category=' + encodeURIComponent(cat))
+        .then(function(r){ return r.json(); })
+        .then(function(res) {
+          btn.textContent = '\u26A1 Auto Code';
+          btn.disabled = false;
+          if (res.success) {
+            document.getElementById('material_code').value = res.code;
+            document.getElementById('code-hint').textContent = 'Auto-generated code: ' + res.code;
+          } else {
+            document.getElementById('code-hint').textContent = 'Could not generate code. Please enter manually.';
+          }
+        })
+        .catch(function() {
+          btn.textContent = '\u26A1 Auto Code';
+          btn.disabled = false;
+        });
+    }
+
+    // Auto-generate code when category is filled and code is empty
+    document.getElementById('category').addEventListener('change', function() {
+      var codeField = document.getElementById('material_code');
+      if (!codeField.value.trim()) {
+        generateCode();
+      }
+    });
+  </script>
+
+</body>
+</html>
+
