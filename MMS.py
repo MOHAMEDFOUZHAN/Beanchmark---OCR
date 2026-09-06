@@ -2771,8 +2771,25 @@ def transfer_edit(tid):
         person = request.form.get("person")
         units = request.form.get("units")
 
-        new_outward = float(request.form.get("outward") or 0)
-        new_return_units = float(request.form.get("return_units") or 0)
+        if request.form.get("outward") is not None:
+            new_outward = float(request.form.get("outward") or 0)
+        else:
+            main_val = float(request.form.get("outward_main") or 0)
+            sub_val = float(request.form.get("outward_sub") or 0)
+            if units in ["kg", "litre"]:
+                new_outward = main_val + (sub_val / 1000.0)
+            else:
+                new_outward = main_val
+
+        if request.form.get("return_units") is not None:
+            new_return_units = float(request.form.get("return_units") or 0)
+        else:
+            main_ret = float(request.form.get("return_main") or 0)
+            sub_ret = float(request.form.get("return_sub") or 0)
+            if units in ["kg", "litre"]:
+                new_return_units = main_ret + (sub_ret / 1000.0)
+            else:
+                new_return_units = main_ret
 
         # 1. Get Current Stock for THIS LOT
         cur.execute("SELECT quantity FROM materials WHERE material_code = ? AND lot_no = ?", (material_code, original_transfer['lot_no']))
@@ -2838,6 +2855,12 @@ def transfer_delete(tid):
         cur.execute("DELETE FROM transfers WHERE id=?", (tid,))
         conn.commit()
     return redirect(url_for("transfer_list"))
+
+@app.route("/help")
+def system_help():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    return render_template("help.html")
 
 # -----------------------------
 # Material Utilization Report (MUR)
@@ -3183,6 +3206,90 @@ def report_expiring():
     
     current_date = datetime.now().strftime("%d/%m/%Y %H:%M")
     return render_template("reports/expiring.html", materials=materials, current_date=current_date)
+
+# -----------------------------
+# Material Directory / Wall Reference Chart Report
+# -----------------------------
+@app.route("/reports/material_directory")
+@app.route("/reports/material_catalog")
+def report_material_directory():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    selected_category = request.args.get("category", "").strip()
+    search = request.args.get("search", "").strip()
+    
+    # Get distinct categories for dropdown filter
+    cur.execute("SELECT DISTINCT category FROM materials WHERE category IS NOT NULL AND category != '' ORDER BY category ASC")
+    categories = [r["category"] for r in cur.fetchall()]
+    
+    # Fetch category to shelf location mapping
+    cur.execute("SELECT category, location FROM category_locations")
+    loc_map = {r['category']: r['location'] for r in cur.fetchall()}
+    
+    # Fetch unique master materials by code
+    query = """
+        SELECT 
+            material_code,
+            description,
+            category,
+            unit,
+            COALESCE(hsn_sac, '') as hsn_sac,
+            MAX(reorder_level) as reorder_level
+        FROM materials
+        WHERE 1=1
+    """
+    params = []
+    if selected_category:
+        query += " AND category = ?"
+        params.append(selected_category)
+    if search:
+        query += " AND (material_code LIKE ? OR description LIKE ? OR category LIKE ? OR hsn_sac LIKE ?)"
+        term = f"%{search}%"
+        params.extend([term, term, term, term])
+        
+    query += " GROUP BY material_code, description, category, unit ORDER BY category ASC, material_code ASC, description ASC"
+    
+    cur.execute(query, tuple(params))
+    rows = cur.fetchall()
+    
+    # Group materials by Category for clean wall chart printing
+    grouped_materials = {}
+    total_materials = 0
+    
+    for r in rows:
+        cat = r["category"] or "Uncategorized"
+        if cat not in grouped_materials:
+            grouped_materials[cat] = {
+                "category_name": cat,
+                "location": loc_map.get(cat, "Not Assigned"),
+                "material_items": []
+            }
+        grouped_materials[cat]["material_items"].append({
+            "code": r["material_code"],
+            "description": r["description"],
+            "unit": r["unit"] or "-",
+            "hsn_sac": r["hsn_sac"] or "-",
+            "reorder_level": r["reorder_level"] or 0,
+            "location": loc_map.get(cat, "Not Assigned")
+        })
+        total_materials += 1
+        
+    current_date = datetime.now().strftime("%d/%m/%Y %I:%M %p")
+    
+    return render_template(
+        "reports/material_directory.html",
+        grouped_materials=grouped_materials,
+        categories=categories,
+        selected_category=selected_category,
+        search=search,
+        total_materials=total_materials,
+        total_categories=len(grouped_materials),
+        current_date=current_date
+    )
 
 # -----------------------------
 # NEW: Storage / Batch Report

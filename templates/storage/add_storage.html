@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -167,7 +167,10 @@
       <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
       <h1>Add New Batch</h1>
     </div>
-    <a href="/logout">Logout</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="javascript:void(0)" onclick="openHelpModal()" class="mms-help-btn" title="Click for System Guide & Grams Format">Help</a>
+      <a href="/logout">Logout</a>
+    </div>
   </header>
 
   <nav>
@@ -220,6 +223,8 @@
             <option value="">--Select Unit--</option>
             <option value="kg">Kg</option>
             <option value="litre">Litre</option>
+            <option value="ml">ML</option>
+            <option value="grams">Grams</option>
             <option value="pcs">Pieces</option>
             <option value="box">Box</option>
             <option value="meter">Meter</option>
@@ -352,6 +357,7 @@
       }
     });
   </script>
+{% include 'help_modal.html' %}
 </body>
 
 </html>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -235,7 +235,10 @@
       <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
       <h1>View Material</h1>
     </div>
-    <a href="/logout">Logout</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="javascript:void(0)" onclick="openHelpModal()" class="mms-help-btn" title="Click for System Guide & Grams Format">Help</a>
+      <a href="/logout">Logout</a>
+    </div>
   </header>
 
   <nav>
@@ -313,7 +316,10 @@
           <a href="/materials" style="color: #666; text-decoration: none; font-size: 14px; font-weight: bold;">Clear</a>
           {% endif %}
         </form>
-        <button onclick="window.print()">Print</button>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <a href="/reports/material_directory" style="background-color: #0284c7; color: white; padding: 8px 14px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 13px; display: inline-flex; align-items: center; gap: 5px;">📋 Wall Chart</a>
+          <button onclick="window.print()">Print</button>
+        </div>
       </div>
 
       <table id="materialTable">
@@ -451,6 +457,7 @@
       }
     });
   </script>
+{% include 'help_modal.html' %}
 </body>
 
 </html>

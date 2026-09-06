@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Material Directory & Wall Reference Chart</title>
+  <style>
+    /* =========================================================
+       SCREEN STYLES
+       ========================================================= */
+    :root {
+      --primary: #0C294B;
+      --primary-light: #093267;
+      --accent: #2563eb;
+      --bg: #E6EDF6;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+      --highlight: #fef08a;
+      --font-scale: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top Navigation & Header */
+    .site-header {
+      background-color: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-container img {
+      height: 42px;
+      width: 42px;
+      border-radius: 8px;
+      background-color: #fff;
+      padding: 2px;
+    }
+
+    .logo-container h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: 0.5px;
+    }
+
+    .site-header a.logout-btn {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+    }
+
+    .site-header a.logout-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    nav {
+      background-color: var(--primary-light);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 16px;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+
+    nav a:hover {
+      background-color: var(--primary);
+    }
+
+    nav a.active {
+      background-color: var(--primary);
+      font-weight: bold;
+      border-bottom: 3px solid #38bdf8;
+    }
+
+    /* Main Container */
+    .main-wrapper {
+      max-width: 1400px;
+      width: 96%;
+      margin: 24px auto 40px;
+      flex: 1 0 auto;
+    }
+
+    /* Control Panel Card */
+    .control-panel {
+      background: var(--card-bg);
+      padding: 20px 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      margin-bottom: 24px;
+    }
+
+    .control-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title-area h2 {
+      margin: 0 0 4px 0;
+      color: var(--primary);
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-title-area p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 13.5px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-print {
+      background-color: #0284c7;
+      color: white;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+    }
+
+    .btn-print:hover {
+      background-color: #0369a1;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: #f1f5f9;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+
+    .btn-secondary:hover {
+      background-color: #e2e8f0;
+      color: #0f172a;
+    }
+
+    /* Filters & Customization Toolbar */
+    .filter-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-input {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+      color: var(--text);
+      min-width: 200px;
+    }
+
+    .filter-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .view-toggles {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 8px;
+    }
+
+    .view-btn {
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: #475569;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .view-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .font-scale-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .font-scale-control select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      background: white;
+    }
+
+    /* Statistics Summary Bar */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      background: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-left: 4px solid var(--accent);
+    }
+
+    .stat-pill strong {
+      font-size: 16px;
+      color: var(--primary);
+    }
+
+    .stat-pill span {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* =========================================================
+       WALL CHART DISPLAY & CATEGORY SECTIONS
+       ========================================================= */
+    #printableWallChart {
+      font-size: var(--font-scale);
+    }
+
+    .category-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+      margin-bottom: 28px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .category-header {
+      background: linear-gradient(135deg, var(--primary) 0%, #173b66 100%);
+      color: white;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .category-header-title {
+      font-size: 1.15em;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: 0.3px;
+    }
+
+    .category-location-badge {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .category-count-badge {
+      background: #38bdf8;
+      color: #0c294b;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: 700;
+    }
+
+    /* Tables */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .directory-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .directory-table th {
+      background-color: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      padding: 10px 14px;
+      font-size: 0.88em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #cbd5e1;
+    }
+
+    .directory-table td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    .directory-table tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    .directory-table tbody tr:hover {
+      background-color: #e0f2fe;
+    }
+
+    /* Code Badge for Wall Visibility */
+    .mat-code-badge {
+      display: inline-block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-weight: 700;
+      font-size: 1.05em;
+      color: #0369a1;
+      background: #e0f2fe;
+      padding: 3px 8px;
+      border-radius: 5px;
+      border: 1px solid #bae6fd;
+      letter-spacing: 0.5px;
+    }
+
+    .mat-desc {
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .mat-unit-badge {
+      display: inline-block;
+      font-size: 0.85em;
+      color: #475569;
+      background: #f1f5f9;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .mat-hsn {
+      font-family: monospace;
+      color: #64748b;
+      font-size: 0.9em;
+    }
+
+    .mat-shelf-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.85em;
+      color: #15803d;
+      background: #dcfce7;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    /* Multi-Column Wall Poster Grid Mode */
+    .poster-grid-mode {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+      gap: 20px;
+    }
+
+    /* Continuous Master List View */
+    .unified-table-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      display: none;
+    }
+
+    /* Print Header (Screen Hidden) */
+    .print-only-header {
+      display: none;
+    }
+
+    /* Footer */
+    footer {
+      background-color: var(--primary);
+      color: white;
+      text-align: center;
+      padding: 12px;
+      font-size: 13px;
+      margin-top: auto;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .poster-grid-mode {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filter-group {
+        width: 100%;
+      }
+
+      .filter-input {
+        width: 100%;
+      }
+    }
+
+    /* =========================================================
+       PRINT STYLES (@media print)
+       ========================================================= */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 10mm 10mm 12mm 10mm;
+      }
+
+      body {
+        background: white !important;
+        color: black !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
+        font-size: 11pt !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      /* Hide interactive screen UI */
+      .site-header,
+      nav,
+      .control-panel,
+      .stats-bar,
+      footer,
+      .no-print {
+        display: none !important;
+      }
+
+      .main-wrapper {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      /* Printable Wall Header Banner */
+      .print-only-header {
+        display: block !important;
+        border-bottom: 2.5px solid #000;
+        padding-bottom: 8px;
+        margin-bottom: 14px;
+      }
+
+      .print-header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .print-header-top h1 {
+        font-size: 16pt;
+        font-weight: 800;
+        margin: 0;
+        text-transform: uppercase;
+        color: #000;
+        letter-spacing: 0.5px;
+      }
+
+      .print-header-sub {
+        font-size: 11pt;
+        font-weight: 700;
+        color: #222;
+        margin: 3px 0 0 0;
+      }
+
+      .print-meta-info {
+        font-size: 8.5pt;
+        color: #444;
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+      }
+
+      /* Category Card in Print */
+      .category-card {
+        box-shadow: none !important;
+        border: 1.5px solid #000 !important;
+        margin-bottom: 14px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        border-radius: 4px !important;
+      }
+
+      .category-header {
+        background: #111 !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        padding: 6px 10px !important;
+        border-bottom: 1.5px solid #000 !important;
+      }
+
+      .category-header-title {
+        font-size: 11pt !important;
+        color: white !important;
+      }
+
+      .category-location-badge {
+        background: white !important;
+        color: black !important;
+        border: 1px solid black !important;
+        font-size: 8.5pt !important;
+        padding: 2px 6px !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .category-count-badge {
+        background: #eee !important;
+        color: #000 !important;
+        border: 1px solid #000 !important;
+        font-size: 8.5pt !important;
+      }
+
+      /* Directory Table in Print */
+      .directory-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+      }
+
+      .directory-table th {
+        background-color: #f0f0f0 !important;
+        color: #000 !important;
+        border: 1px solid #333 !important;
+        padding: 5px 8px !important;
+        font-size: 9pt !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .directory-table td {
+        border: 1px solid #777 !important;
+        padding: 5px 8px !important;
+        font-size: 9.5pt !important;
+        color: #000 !important;
+      }
+
+      .directory-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .mat-code-badge {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        font-size: 10pt !important;
+        font-weight: 800 !important;
+        color: #000 !important;
+      }
+
+      .mat-desc {
+        font-size: 9.5pt !important;
+        color: #000 !important;
+        font-weight: 600 !important;
+      }
+
+      .mat-unit-badge {
+        background: none !important;
+        padding: 0 !important;
+        color: #000 !important;
+        font-size: 9pt !important;
+      }
+
+      .mat-hsn {
+        color: #222 !important;
+        font-size: 8.5pt !important;
+      }
+
+      .mat-shelf-badge {
+        background: none !important;
+        padding: 0 !important;
+        color: #000 !important;
+        font-weight: 600 !important;
+      }
+
+      /* Wall Poster Dense Mode (2 Columns per printed sheet if selected) */
+      .poster-grid-mode {
+        display: block !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Screen Site Header -->
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>Material Directory & Wall Reference Chart</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="javascript:void(0)" onclick="openHelpModal()" class="mms-help-btn" title="Click for System Guide & Grams Format">Help</a>
+      <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+  </header>
+
+  <!-- Navigation Bar -->
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/materials/master">Materials Master</a>
+    <a href="/materials/new">New Material</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/stock/adjustment">Stock Adjustment</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports" class="active">Reports</a>
+  </nav>
+
+  <main class="main-wrapper">
+
+    <!-- Screen Control & Customization Panel -->
+    <div class="control-panel no-print">
+      <div class="control-panel-header">
+        <div class="panel-title-area">
+          <h2>📋 Material Directory & Wall Poster Chart</h2>
+          <p>Printable high-visibility reference sheet organized by Category with Codes, Descriptions, Units, and Shelf Locations.</p>
+        </div>
+        <div class="action-buttons">
+          <button type="button" class="btn btn-print" onclick="window.print();" id="printButton">
+            🖨️ Print Wall Chart / PDF
+          </button>
+          <a href="/reports" class="btn btn-secondary">
+            ← Back to Reports
+          </a>
+        </div>
+      </div>
+
+      <!-- Filters & Toolbar -->
+      <div class="filter-toolbar">
+        <!-- Search & Filter Form -->
+        <form method="GET" action="/reports/material_directory" class="filter-group" id="filterForm">
+          <select name="category" class="filter-input" onchange="document.getElementById('filterForm').submit();" id="categorySelect">
+            <option value="">-- All Categories ({{ total_categories }} Categories) --</option>
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+          </select>
+
+          <input type="text" id="liveSearchInput" class="filter-input" placeholder="🔍 Live search code or name..." onkeyup="filterLiveItems()" autocomplete="off">
+          
+          {% if selected_category or search %}
+          <a href="/reports/material_directory" class="btn btn-secondary" style="padding: 7px 12px; font-size: 13px;">Clear Filter</a>
+          {% endif %}
+        </form>
+
+        <!-- View Mode & Font Size Adjusters -->
+        <div class="filter-group">
+          <div class="font-scale-control">
+            <label for="fontScaleSelect">🔤 Wall Text Size:</label>
+            <select id="fontScaleSelect" onchange="changeFontScale(this.value);">
+              <option value="12px">Compact (Fit More)</option>
+              <option value="14px" selected>Normal (Standard)</option>
+              <option value="16px">Large (Wall Poster)</option>
+              <option value="18px">Extra Large (High Visibility)</option>
+            </select>
+          </div>
+
+          <div class="view-toggles">
+            <button type="button" class="view-btn active" id="btnGroupedView" onclick="setViewMode('grouped');">📁 Category Grouped</button>
+            <button type="button" class="view-btn" id="btnUnifiedView" onclick="setViewMode('unified');">📑 Master Table</button>
+            <button type="button" class="view-btn" id="btnPosterGrid" onclick="setViewMode('poster');">🗂️ 2-Column Grid</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Statistics Summary Bar (Screen Only) -->
+    <div class="stats-bar no-print">
+      <div class="stat-pill">
+        <span>Total Materials:</span>
+        <strong id="statTotalItems">{{ total_materials }} Items</strong>
+      </div>
+      <div class="stat-pill" style="border-left-color: #10b981;">
+        <span>Active Categories:</span>
+        <strong id="statTotalCats">{{ total_categories }} Categories</strong>
+      </div>
+      <div class="stat-pill" style="border-left-color: #8b5cf6;">
+        <span>Format:</span>
+        <strong>A4 Wall Chart Reference</strong>
+      </div>
+    </div>
+
+    <!-- PRINT-ONLY HEADER BANNER -->
+    <div class="print-only-header">
+      <div class="print-header-top">
+        <div>
+          <h1>Benchmark Tea & Chocolate Factory</h1>
+          <div class="print-header-sub">MATERIAL MASTER CODE & CATEGORY DIRECTORY — WALL REFERENCE CHART</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 14pt; font-weight: bold; border: 2px solid #000; padding: 4px 10px; display: inline-block;">
+            MMS DIRECTORY
+          </div>
+        </div>
+      </div>
+      <div class="print-meta-info">
+        <span><strong>Category Filter:</strong> {{ selected_category if selected_category else 'ALL CATEGORIES' }}</span>
+        <span><strong>Total Listed:</strong> {{ total_materials }} Materials</span>
+        <span><strong>Printed Date & Time:</strong> {{ current_date }}</span>
+      </div>
+    </div>
+
+    <!-- MAIN PRINTABLE WALL CHART CONTENT -->
+    <div id="printableWallChart">
+
+      <!-- 1. CATEGORY GROUPED VIEW (Default & Ideal for Wall Posters) -->
+      <div id="categoryGroupedContainer" class="grouped-container">
+        {% if grouped_materials %}
+          {% for cat_name, cat_data in grouped_materials.items() %}
+          <div class="category-card" data-category="{{ cat_name }}">
+            <div class="category-header">
+              <div class="category-header-title">
+                <span>📁 {{ cat_name }}</span>
+                <span class="category-count-badge">{{ cat_data.material_items|length }} Items</span>
+              </div>
+              <div class="category-location-badge">
+                📍 Shelf Location: <strong>{{ cat_data.location }}</strong>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="directory-table">
+                <thead>
+                  <tr>
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th style="width: 150px;">Material Code</th>
+                    <th>Material Description / Name</th>
+                    <th style="width: 90px; text-align: center;">Unit</th>
+                    <th style="width: 110px; text-align: center;">HSN / SAC</th>
+                    <th style="width: 140px;">Shelf / Location</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in cat_data.material_items %}
+                  <tr class="item-row" data-code="{{ item.code|lower }}" data-desc="{{ item.description|lower }}" data-cat="{{ cat_name|lower }}">
+                    <td style="text-align: center; font-weight: 600; color: #64748b;">{{ loop.index }}</td>
+                    <td>
+                      <span class="mat-code-badge">{{ item.code }}</span>
+                    </td>
+                    <td>
+                      <span class="mat-desc">{{ item.description }}</span>
+                    </td>
+                    <td style="text-align: center;">
+                      <span class="mat-unit-badge">{{ item.unit }}</span>
+                    </td>
+                    <td style="text-align: center;">
+                      <span class="mat-hsn">{{ item.hsn_sac }}</span>
+                    </td>
+                    <td>
+                      {% if item.location and item.location != 'Not Assigned' %}
+                      <span class="mat-shelf-badge">🏷️ {{ item.location }}</span>
+                      {% else %}
+                      <span style="color: #94a3b8; font-size: 0.85em;">-</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="category-card" style="padding: 40px; text-align: center; color: #64748b;">
+            <h3>No materials found matching your filter.</h3>
+            <p>Try resetting the category filter or searching with different keywords.</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- 2. UNIFIED CONTINUOUS MASTER TABLE VIEW -->
+      <div id="unifiedTableContainer" class="unified-table-card">
+        <div class="table-responsive">
+          <table class="directory-table">
+            <thead>
+              <tr>
+                <th style="width: 50px; text-align: center;">#</th>
+                <th style="width: 140px;">Material Code</th>
+                <th>Material Description / Name</th>
+                <th style="width: 160px;">Category</th>
+                <th style="width: 80px; text-align: center;">Unit</th>
+                <th style="width: 100px; text-align: center;">HSN / SAC</th>
+                <th style="width: 130px;">Shelf Location</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% set ns = namespace(count=0) %}
+              {% for cat_name, cat_data in grouped_materials.items() %}
+                {% for item in cat_data.material_items %}
+                {% set ns.count = ns.count + 1 %}
+                <tr class="item-row" data-code="{{ item.code|lower }}" data-desc="{{ item.description|lower }}" data-cat="{{ cat_name|lower }}">
+                  <td style="text-align: center; font-weight: 600; color: #64748b;">{{ ns.count }}</td>
+                  <td>
+                    <span class="mat-code-badge">{{ item.code }}</span>
+                  </td>
+                  <td>
+                    <span class="mat-desc">{{ item.description }}</span>
+                  </td>
+                  <td>
+                    <span style="font-weight: 600; color: #334155;">{{ cat_name }}</span>
+                  </td>
+                  <td style="text-align: center;">
+                    <span class="mat-unit-badge">{{ item.unit }}</span>
+                  </td>
+                  <td style="text-align: center;">
+                    <span class="mat-hsn">{{ item.hsn_sac }}</span>
+                  </td>
+                  <td>
+                    {% if item.location and item.location != 'Not Assigned' %}
+                    <span class="mat-shelf-badge">🏷️ {{ item.location }}</span>
+                    {% else %}
+                    <span style="color: #94a3b8; font-size: 0.85em;">-</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="no-print">
+    © 2025 Material Management System | Benchmark Tea & Chocolate Factory
+  </footer>
+
+  <script>
+    // Live Search Functionality
+    function filterLiveItems() {
+      const input = document.getElementById('liveSearchInput');
+      const filter = input.value.toLowerCase().trim();
+      const rows = document.querySelectorAll('.item-row');
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        const code = row.getAttribute('data-code') || '';
+        const desc = row.getAttribute('data-desc') || '';
+        const cat = row.getAttribute('data-cat') || '';
+
+        if (code.includes(filter) || desc.includes(filter) || cat.includes(filter)) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      // Also hide empty category cards in grouped view
+      const categoryCards = document.querySelectorAll('.category-card');
+      categoryCards.forEach(card => {
+        const visibleRowsInCard = card.querySelectorAll('tbody tr:not([style*="display: none"])');
+        if (visibleRowsInCard.length === 0 && filter !== '') {
+          card.style.display = 'none';
+        } else {
+          card.style.display = '';
+        }
+      });
+
+      // Update stat pill
+      const statTotal = document.getElementById('statTotalItems');
+      if (statTotal) {
+        statTotal.textContent = filter ? `${visibleCount} Matched` : `{{ total_materials }} Items`;
+      }
+    }
+
+    // View Mode Switcher
+    function setViewMode(mode) {
+      const groupedContainer = document.getElementById('categoryGroupedContainer');
+      const unifiedContainer = document.getElementById('unifiedTableContainer');
+      const btnGrouped = document.getElementById('btnGroupedView');
+      const btnUnified = document.getElementById('btnUnifiedView');
+      const btnPoster = document.getElementById('btnPosterGrid');
+
+      // Reset active buttons
+      btnGrouped.classList.remove('active');
+      btnUnified.classList.remove('active');
+      btnPoster.classList.remove('active');
+
+      if (mode === 'unified') {
+        groupedContainer.style.display = 'none';
+        unifiedContainer.style.display = 'block';
+        btnUnified.classList.add('active');
+      } else if (mode === 'poster') {
+        groupedContainer.style.display = 'grid';
+        groupedContainer.className = 'poster-grid-mode';
+        unifiedContainer.style.display = 'none';
+        btnPoster.classList.add('active');
+      } else {
+        // Grouped default
+        groupedContainer.style.display = 'block';
+        groupedContainer.className = 'grouped-container';
+        unifiedContainer.style.display = 'none';
+        btnGrouped.classList.add('active');
+      }
+    }
+
+    // Font Scaling for Wall Readability
+    function changeFontScale(size) {
+      document.documentElement.style.setProperty('--font-scale', size);
+    }
+
+    // Active Navigation Highlight
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('nav a');
+      let bestMatch = null;
+      let maxLength = -1;
+
+      navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath === href) {
+          bestMatch = link;
+          maxLength = href.length;
+        } else if (href !== '/' && currentPath.startsWith(href) && href.length > maxLength) {
+          bestMatch = link;
+          maxLength = href.length;
+        }
+      });
+
+      if (bestMatch) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        bestMatch.classList.add('active');
+      }
+    });
+  </script>
+{% include 'help_modal.html' %}
+</body>
+
+</html>

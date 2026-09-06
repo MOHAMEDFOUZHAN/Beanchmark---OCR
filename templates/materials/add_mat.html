@@ -100,7 +100,10 @@
         style="border-radius:8px; background:#fff;">
       <h1 style="font-size:22px; margin:0; color:white;">Add New Material</h1>
     </div>
-    <a href="/logout" style="color:white; text-decoration:none; font-weight:bold;">Logout</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="javascript:void(0)" onclick="openHelpModal()" class="mms-help-btn" title="Click for System Guide & Grams Format">Help</a>
+      <a href="/logout" style="color:white; text-decoration:none; font-weight:bold;">Logout</a>
+    </div>
   </header>
 
   <nav>
@@ -179,6 +182,7 @@
       </div>
     </form>
   </div>
+{% include 'help_modal.html' %}
 </body>
 
 </html>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -161,7 +161,10 @@
       <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
       <h1>Edit Batch</h1>
     </div>
-    <a href="/logout">Logout</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="javascript:void(0)" onclick="openHelpModal()" class="mms-help-btn" title="Click for System Guide & Grams Format">Help</a>
+      <a href="/logout">Logout</a>
+    </div>
   </header>
 
   <nav>
@@ -212,6 +215,8 @@
             <option value="">--Select Unit--</option>
             <option value="kg" {% if batch.uom=='kg' %}selected{% endif %}>Kg</option>
             <option value="litre" {% if batch.uom=='litre' %}selected{% endif %}>Litre</option>
+            <option value="ml" {% if batch.uom=='ml' %}selected{% endif %}>ML</option>
+            <option value="grams" {% if batch.uom=='grams' %}selected{% endif %}>Grams</option>
             <option value="pcs" {% if batch.uom=='pcs' %}selected{% endif %}>Pieces</option>
             <option value="box" {% if batch.uom=='box' %}selected{% endif %}>Box</option>
             <option value="meter" {% if batch.uom=='meter' %}selected{% endif %}>Meter</option>
@@ -319,6 +324,7 @@
       }
     });
   </script>
+{% include 'help_modal.html' %}
 </body>
 
 </html>

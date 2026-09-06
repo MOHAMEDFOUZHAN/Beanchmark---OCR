@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -146,7 +146,10 @@
       <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
       <h1>Edit Dispatch</h1>
     </div>
-    <a href="/logout">Logout</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="javascript:void(0)" onclick="openHelpModal()" class="mms-help-btn" title="Click for System Guide & Grams Format">Help</a>
+      <a href="/logout">Logout</a>
+    </div>
   </header>
 
   <nav>
@@ -185,6 +188,8 @@
             <option value="">--Select Unit--</option>
             <option value="kg" {% if dispatch.units=='kg' %}selected{% endif %}>Kilogram (kg)</option>
             <option value="litre" {% if dispatch.units=='litre' %}selected{% endif %}>Litre (L)</option>
+            <option value="ml" {% if dispatch.units=='ml' %}selected{% endif %}>ML</option>
+            <option value="grams" {% if dispatch.units=='grams' %}selected{% endif %}>Grams</option>
             <option value="pcs" {% if dispatch.units=='pcs' %}selected{% endif %}>Pieces</option>
             <option value="box" {% if dispatch.units=='box' %}selected{% endif %}>Box</option>
             <option value="meter" {% if dispatch.units=='meter' %}selected{% endif %}>Meter</option>
@@ -261,6 +266,7 @@
       if (label) label.textContent = unit ? unit : "-";
     }
   </script>
+{% include 'help_modal.html' %}
 </body>
 
 </html>

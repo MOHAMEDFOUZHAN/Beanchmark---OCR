@@ -1,0 +1,493 @@
+<!-- MMS Global Help Modal Component -->
+<style>
+  .mms-help-btn {
+    color: #ffffff !important;
+    text-decoration: none !important;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .mms-help-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: #ffffff;
+    transform: translateY(-1px);
+  }
+  .mms-help-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(12, 41, 75, 0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .mms-help-modal-overlay.active {
+    display: flex;
+  }
+  .mms-help-modal-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 950px;
+    max-height: 90vh;
+    border-radius: 12px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: mmsModalSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes mmsModalSlideDown {
+    from { opacity: 0; transform: translateY(-20px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .mms-help-modal-header {
+    background: #0C294B;
+    color: #ffffff;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid #093267;
+  }
+  .mms-help-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ffffff;
+  }
+  .mms-help-modal-header .close-btn {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+  .mms-help-modal-header .close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .mms-help-nav-tabs {
+    display: flex;
+    background: #E6EDF6;
+    border-bottom: 1px solid #ccd9e8;
+    padding: 0 15px;
+  }
+  .mms-help-nav-tab {
+    padding: 12px 20px;
+    font-weight: bold;
+    color: #0C294B;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .mms-help-nav-tab:hover {
+    background: rgba(12, 41, 75, 0.05);
+  }
+  .mms-help-nav-tab.active {
+    background: #ffffff;
+    border-bottom-color: #0C294B;
+    color: #0C294B;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+  }
+  .mms-help-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    font-family: Arial, sans-serif;
+    color: #333333;
+    line-height: 1.5;
+  }
+  .mms-help-tab-content {
+    display: none;
+  }
+  .mms-help-tab-content.active {
+    display: block;
+  }
+  
+  /* Tables styling inside modal */
+  .mms-guide-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0 25px 0;
+    font-size: 13.5px;
+  }
+  .mms-guide-table th {
+    background: #0C294B;
+    color: #ffffff;
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+  }
+  .mms-guide-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .mms-guide-table tr:nth-child(even) {
+    background: #f8fafc;
+  }
+  .mms-guide-table tr:hover {
+    background: #edf2f7;
+  }
+  .mms-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  .mms-badge-green { background: #dcfce7; color: #15803d; }
+  .mms-badge-blue { background: #dbeafe; color: #1e40af; }
+  .mms-badge-amber { background: #fef3c7; color: #92400e; }
+
+  /* Info callout boxes */
+  .mms-callout {
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border-left: 4px solid;
+    font-size: 13.5px;
+  }
+  .mms-callout-warning {
+    background: #fffbeb;
+    border-left-color: #f59e0b;
+    color: #92400e;
+  }
+  .mms-callout-info {
+    background: #eff6ff;
+    border-left-color: #3b82f6;
+    color: #1e40af;
+  }
+  .mms-callout-tip {
+    background: #f0fdf4;
+    border-left-color: #10b981;
+    color: #065f46;
+  }
+
+  /* Grid of Page cards */
+  .mms-pages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 15px;
+  }
+  .mms-page-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .mms-page-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    border-color: #cbd5e1;
+  }
+  .mms-page-card h4 {
+    margin: 0 0 8px 0;
+    color: #0C294B;
+    font-size: 15px;
+    font-weight: bold;
+  }
+  .mms-page-card p {
+    margin: 0;
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.4;
+  }
+
+  .mms-help-modal-footer {
+    background: #f1f5f9;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e2e8f0;
+    font-size: 13px;
+    color: #64748b;
+  }
+  .mms-help-modal-footer button {
+    background: #0C294B;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .mms-help-modal-footer button:hover {
+    background: #093267;
+  }
+</style>
+
+<!-- Modal HTML Structure -->
+<div id="mmsHelpModalOverlay" class="mms-help-modal-overlay" onclick="if(event.target === this) closeHelpModal()">
+  <div class="mms-help-modal-card">
+    
+    <!-- Modal Header -->
+    <div class="mms-help-modal-header">
+      <h2>MMS Software User Guide & Help Center</h2>
+      <button type="button" class="close-btn" onclick="closeHelpModal()" title="Close Help">&times;</button>
+    </div>
+
+    <!-- Tab Buttons -->
+    <div class="mms-help-nav-tabs">
+      <button type="button" class="mms-help-nav-tab active" onclick="switchHelpTab('tab-grams-guide')">
+        How to Enter Grams & ML
+      </button>
+      <button type="button" class="mms-help-nav-tab" onclick="switchHelpTab('tab-pages-guide')">
+        Pages & System Guide
+      </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="mms-help-modal-body">
+      
+      <!-- TAB 1: GRAMS & ML GUIDE -->
+      <div id="tab-grams-guide" class="mms-help-tab-content active">
+        <div class="mms-callout mms-callout-info">
+          <strong>Base Unit Rule in MMS:</strong><br>
+          All solid materials (Tea, Spices, Fruits, Nuts, Sugar, etc.) are recorded with base unit <strong>Kg</strong>.<br>
+          All liquids (Oils, Essences, Flavours) are recorded with base unit <strong>Litre</strong>.<br>
+          Because <strong>1 Kg = 1000 Grams</strong> and <strong>1 Litre = 1000 ML</strong>, quantities are entered using <strong>3 decimal places</strong>.
+        </div>
+
+        <h3 style="color:#0C294B; margin-top:0;">Grams to Kg Conversion Table:</h3>
+        <table class="mms-guide-table">
+          <thead>
+            <tr>
+              <th>Quantity Needed</th>
+              <th>Unit to Choose</th>
+              <th>Value to Type in Quantity Box</th>
+              <th>How the System Displays</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1 Gram</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Kg</span></td>
+              <td><code style="font-weight:bold; font-size:14px;">0.001</code></td>
+              <td><span class="mms-badge mms-badge-green">0 kg 1 g</span></td>
+            </tr>
+            <tr>
+              <td><strong>5 Grams</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Kg</span></td>
+              <td><code style="font-weight:bold; font-size:14px;">0.005</code></td>
+              <td><span class="mms-badge mms-badge-green">0 kg 5 g</span></td>
+            </tr>
+            <tr>
+              <td><strong>12 Grams</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Kg</span></td>
+              <td><code style="font-weight:bold; font-size:14px; color:#c026d3;">0.012</code></td>
+              <td><span class="mms-badge mms-badge-green">0 kg 12 g</span></td>
+            </tr>
+            <tr>
+              <td><strong>50 Grams</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Kg</span></td>
+              <td><code style="font-weight:bold; font-size:14px;">0.050</code> (or 0.05)</td>
+              <td><span class="mms-badge mms-badge-green">0 kg 50 g</span></td>
+            </tr>
+            <tr>
+              <td><strong>100 Grams</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Kg</span></td>
+              <td><code style="font-weight:bold; font-size:14px;">0.100</code> (or 0.1)</td>
+              <td><span class="mms-badge mms-badge-green">0 kg 100 g</span></td>
+            </tr>
+            <tr>
+              <td><strong>250 Grams (1/4 kg)</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Kg</span></td>
+              <td><code style="font-weight:bold; font-size:14px;">0.250</code> (or 0.25)</td>
+              <td><span class="mms-badge mms-badge-green">0 kg 250 g</span></td>
+            </tr>
+            <tr>
+              <td><strong>500 Grams (Half kg)</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Kg</span></td>
+              <td><code style="font-weight:bold; font-size:14px;">0.500</code> (or 0.5)</td>
+              <td><span class="mms-badge mms-badge-green">0 kg 500 g</span></td>
+            </tr>
+            <tr>
+              <td><strong>1 Kg 250 Grams</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Kg</span></td>
+              <td><code style="font-weight:bold; font-size:14px;">1.250</code></td>
+              <td><span class="mms-badge mms-badge-green">1 kg 250 g</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 style="color:#0C294B;">ML to Litre Conversion Table:</h3>
+        <table class="mms-guide-table">
+          <thead>
+            <tr>
+              <th>Quantity Needed</th>
+              <th>Unit to Choose</th>
+              <th>Value to Type in Quantity Box</th>
+              <th>How the System Displays</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>100 ML</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Litre</span></td>
+              <td><code style="font-weight:bold; font-size:14px;">0.100</code></td>
+              <td><span class="mms-badge mms-badge-green">0 L 100 ml</span></td>
+            </tr>
+            <tr>
+              <td><strong>250 ML</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Litre</span></td>
+              <td><code style="font-weight:bold; font-size:14px;">0.250</code></td>
+              <td><span class="mms-badge mms-badge-green">0 L 250 ml</span></td>
+            </tr>
+            <tr>
+              <td><strong>500 ML (Half Litre)</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Litre</span></td>
+              <td><code style="font-weight:bold; font-size:14px;">0.500</code></td>
+              <td><span class="mms-badge mms-badge-green">0 L 500 ml</span></td>
+            </tr>
+            <tr>
+              <td><strong>1 Litre 500 ML</strong></td>
+              <td><span class="mms-badge mms-badge-blue">Litre</span></td>
+              <td><code style="font-weight:bold; font-size:14px;">1.500</code></td>
+              <td><span class="mms-badge mms-badge-green">1 L 500 ml</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="mms-callout mms-callout-warning">
+          <strong>Common Mistake to Avoid:</strong><br>
+          If you want to transfer <strong>12 grams</strong>, <u>do NOT</u> type <code>12</code> with unit Kg. Typing <code>12</code> will deduct <strong>12 Kilograms (12,000 grams)</strong> from stock!<br>
+          Always type <code>0.012</code> for 12 grams.
+        </div>
+      </div>
+
+      <!-- TAB 2: SYSTEM PAGES GUIDE -->
+      <div id="tab-pages-guide" class="mms-help-tab-content">
+        <div class="mms-callout mms-callout-tip">
+          <strong>Benchmark Tea & Chocolate Factory - Module Breakdown:</strong><br>
+          Here is a guide explaining the purpose of each page in the top navigation bar.
+        </div>
+
+        <div class="mms-pages-grid">
+          <div class="mms-page-card">
+            <h4>Dashboard</h4>
+            <p>High-level overview showing total inventory count, low stock warnings, expiring materials, and quick daily metrics.</p>
+          </div>
+
+          <div class="mms-page-card">
+            <h4>Invoices</h4>
+            <p>Manage raw material purchases and inward bills. Features <strong>RapidOCR</strong> to automatically scan physical invoice documents and extract line items, prices, and GST.</p>
+          </div>
+
+          <div class="mms-page-card">
+            <h4>Transfers / Returns</h4>
+            <p>Issue raw materials to production departments (Tea Factory, Chocolate Factory, Oil Counter, etc.) and record any unused materials returned to inventory.</p>
+          </div>
+
+          <div class="mms-page-card">
+            <h4>Materials & Materials Master</h4>
+            <p>The central master catalog of all materials. Search items by code or name, manage unit prices, reorder thresholds, and synchronize units across historical records.</p>
+          </div>
+
+          <div class="mms-page-card">
+            <h4>Storage (Batches)</h4>
+            <p>Track inventory by specific Batch / Lot numbers (e.g. BATCH-342), monitor manufacturing & expiry dates, and review inward receipts.</p>
+          </div>
+
+          <div class="mms-page-card">
+            <h4>Vendors</h4>
+            <p>Directory of suppliers and raw material vendors, containing contact numbers, GST numbers, addresses, and transaction logs.</p>
+          </div>
+
+          <div class="mms-page-card">
+            <h4>Dispatch</h4>
+            <p>Record outward finished products dispatch with automatic <strong>FIFO (First-In, First-Out)</strong> batch allocation to ensure oldest stock is used first.</p>
+          </div>
+
+          <div class="mms-page-card">
+            <h4>Stock Adjustment</h4>
+            <p>Perform manual stock corrections (add or subtract quantity) for physical audit discrepancies with mandatory reason logging.</p>
+          </div>
+
+          <div class="mms-page-card">
+            <h4>Shelf Mapping</h4>
+            <p>Map material categories to specific physical warehouse shelves, racks, and bin locations for fast warehouse retrieval.</p>
+          </div>
+
+          <div class="mms-page-card">
+            <h4>MUR & Reports</h4>
+            <p>Access deep analytics: Material Utilization Reports (MUR), Departmental Usage Breakdown, Daily Inventory Ledgers, Expiring Items, and Reorder alerts.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="mms-help-modal-footer">
+      <span>Tip: Press <kbd style="background:#e2e8f0; padding:2px 6px; border-radius:3px;">Esc</kbd> anytime to close this guide.</span>
+      <button type="button" onclick="closeHelpModal()">Got it, Close</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function openHelpModal(tabId) {
+    const modal = document.getElementById('mmsHelpModalOverlay');
+    if (modal) {
+      modal.classList.add('active');
+      if (tabId) switchHelpTab(tabId);
+    }
+  }
+
+  function closeHelpModal() {
+    const modal = document.getElementById('mmsHelpModalOverlay');
+    if (modal) modal.classList.remove('active');
+  }
+
+  function switchHelpTab(tabId) {
+    const tabs = document.querySelectorAll('.mms-help-nav-tab');
+    const contents = document.querySelectorAll('.mms-help-tab-content');
+    
+    tabs.forEach(t => t.classList.remove('active'));
+    contents.forEach(c => c.classList.remove('active'));
+
+    const activeContent = document.getElementById(tabId);
+    if (activeContent) activeContent.classList.add('active');
+
+    tabs.forEach(t => {
+      if (t.getAttribute('onclick') && t.getAttribute('onclick').includes(tabId)) {
+        t.classList.add('active');
+      }
+    });
+  }
+
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeHelpModal();
+  });
+</script>

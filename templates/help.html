@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MMS System Help & User Guide - Benchmark Factory</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #E6EDF6;
+      color: #333;
+    }
+    .site-header {
+      background: #0C294B;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .logo-container img {
+      height: 45px;
+      width: 45px;
+      border-radius: 8px;
+      background: #fff;
+    }
+    nav {
+      background: #093267;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      padding: 12px 18px;
+    }
+    nav a:hover {
+      background: #0C294B;
+    }
+    nav a.active {
+      background: #0C294B;
+      font-weight: bold;
+      border-bottom: 3px solid white;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    h1, h2, h3, h4 {
+      color: #0C294B;
+    }
+    .section-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+    .guide-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    .guide-table th {
+      background: #0C294B;
+      color: white;
+      padding: 10px 14px;
+      text-align: left;
+    }
+    .guide-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .guide-table tr:nth-child(even) {
+      background: #f1f5f9;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .badge-green { background: #dcfce7; color: #15803d; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    
+    .callout {
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border-left: 4px solid;
+    }
+    .callout-info { background: #eff6ff; border-left-color: #3b82f6; color: #1e40af; }
+    .callout-warning { background: #fffbeb; border-left-color: #f59e0b; color: #92400e; }
+
+    .pages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 15px;
+    }
+    .page-card {
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
+      <h1>MMS Help & User Guide</h1>
+    </div>
+    <div style="display:flex; align-items:center; gap:15px;">
+      <a href="/logout" style="color: white; text-decoration: none;">Logout</a>
+    </div>
+  </header>
+
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/invoices">Invoices</a>
+    <a href="/transfers">Transfers</a>
+    <a href="/materials">Materials</a>
+    <a href="/materials/master">Materials Master</a>
+    <a href="/materials/new">New Material</a>
+    <a href="/storage">Storage</a>
+    <a href="/vendors">Vendors</a>
+    <a href="/dispatch">Dispatch</a>
+    <a href="/stock/adjustment">Stock Adjustment</a>
+    <a href="/warehouse/categories">Shelf Mapping</a>
+    <a href="/reports/utilization">MUR</a>
+    <a href="/reports">Reports</a>
+  </nav>
+
+  <div class="container">
+    <h2>Benchmark Tea & Chocolate Factory - MMS System Manual</h2>
+
+    <!-- SECTION 1 -->
+    <div class="section-box">
+      <h3>1. How to Enter Grams & Millilitres (ML)</h3>
+      <div class="callout callout-info">
+        <strong>Base Unit Concept:</strong> In MMS, all weights are tracked in <strong>Kg</strong> (1 Kg = 1000 g) and liquids in <strong>Litre</strong> (1 L = 1000 ml). Enter smaller quantities as <strong>decimals with 3 places</strong>.
+      </div>
+
+      <h4>Dry Ingredients (Kg / Grams Conversion Table):</h4>
+      <table class="guide-table">
+        <thead>
+          <tr>
+            <th>Quantity to Issue / Transfer</th>
+            <th>Unit</th>
+            <th>Type in Box</th>
+            <th>System Output</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>1 Gram</strong></td><td>Kg</td><td><code>0.001</code></td><td><span class="badge badge-green">0 kg 1 g</span></td></tr>
+          <tr><td><strong>5 Grams</strong></td><td>Kg</td><td><code>0.005</code></td><td><span class="badge badge-green">0 kg 5 g</span></td></tr>
+          <tr><td><strong>12 Grams</strong></td><td>Kg</td><td><code>0.012</code></td><td><span class="badge badge-green">0 kg 12 g</span></td></tr>
+          <tr><td><strong>50 Grams</strong></td><td>Kg</td><td><code>0.050</code></td><td><span class="badge badge-green">0 kg 50 g</span></td></tr>
+          <tr><td><strong>100 Grams</strong></td><td>Kg</td><td><code>0.100</code></td><td><span class="badge badge-green">0 kg 100 g</span></td></tr>
+          <tr><td><strong>250 Grams (1/4 kg)</strong></td><td>Kg</td><td><code>0.250</code></td><td><span class="badge badge-green">0 kg 250 g</span></td></tr>
+          <tr><td><strong>500 Grams (Half kg)</strong></td><td>Kg</td><td><code>0.500</code></td><td><span class="badge badge-green">0 kg 500 g</span></td></tr>
+          <tr><td><strong>1 Kg 250 Grams</strong></td><td>Kg</td><td><code>1.250</code></td><td><span class="badge badge-green">1 kg 250 g</span></td></tr>
+        </tbody>
+      </table>
+
+      <h4>Liquids & Oils (Litre / ML Conversion Table):</h4>
+      <table class="guide-table">
+        <thead>
+          <tr>
+            <th>Quantity to Issue / Transfer</th>
+            <th>Unit</th>
+            <th>Type in Box</th>
+            <th>System Output</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>100 ML</strong></td><td>Litre</td><td><code>0.100</code></td><td><span class="badge badge-green">0 L 100 ml</span></td></tr>
+          <tr><td><strong>250 ML</strong></td><td>Litre</td><td><code>0.250</code></td><td><span class="badge badge-green">0 L 250 ml</span></td></tr>
+          <tr><td><strong>500 ML (Half Litre)</strong></td><td>Litre</td><td><code>0.500</code></td><td><span class="badge badge-green">0 L 500 ml</span></td></tr>
+          <tr><td><strong>1 Litre 500 ML</strong></td><td>Litre</td><td><code>1.500</code></td><td><span class="badge badge-green">1 L 500 ml</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout-warning">
+        <strong>Warning:</strong> Do NOT type <code>12</code> if you mean 12 grams when the unit is Kg! Typing <code>12</code> deducts 12 kilograms (12,000 grams). Always type <code>0.012</code>.
+      </div>
+    </div>
+
+    <!-- SECTION 2 -->
+    <div class="section-box">
+      <h3>2. System Pages & Features Guide</h3>
+      <div class="pages-grid">
+        <div class="page-card">
+          <h4>Dashboard</h4>
+          <p>Real-time KPI metrics: active lots, inventory value, low-stock warnings, and expiring material alerts.</p>
+        </div>
+        <div class="page-card">
+          <h4>Invoices</h4>
+          <p>Purchase inward registration. Features RapidOCR scanning to automatically digitize physical supplier bills.</p>
+        </div>
+        <div class="page-card">
+          <h4>Transfers / Returns</h4>
+          <p>Issue raw materials to production departments (Tea Factory, Chocolate Factory, etc.) and record returned stock.</p>
+        </div>
+        <div class="page-card">
+          <h4>Materials & Materials Master</h4>
+          <p>Master catalog of all raw materials, pricing, reorder thresholds, and historical unit synchronization.</p>
+        </div>
+        <div class="page-card">
+          <h4>Storage (Batches)</h4>
+          <p>Lot-level tracking with manufacturing and expiry dates, inward history, and real-time available stock.</p>
+        </div>
+        <div class="page-card">
+          <h4>Vendors</h4>
+          <p>Supplier master directory containing contact information, GST numbers, and purchase transaction histories.</p>
+        </div>
+        <div class="page-card">
+          <h4>Dispatch</h4>
+          <p>Record finished goods dispatches with automated FIFO batch deduction.</p>
+        </div>
+        <div class="page-card">
+          <h4>Stock Adjustment</h4>
+          <p>Manual inventory corrections with mandatory audit logging and reason records.</p>
+        </div>
+        <div class="page-card">
+          <h4>Shelf Mapping</h4>
+          <p>Map material categories to specific physical warehouse shelves, racks, and bins.</p>
+        </div>
+        <div class="page-card">
+          <h4>MUR & Reports</h4>
+          <p>Material Utilization Reports, Departmental Transfers, Daily Ledgers, and Expiring Batches warnings.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

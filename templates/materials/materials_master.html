@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -207,7 +207,10 @@
             <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
             <h1>Materials Master</h1>
         </div>
-        <a href="/logout">Logout</a>
+        <div style="display:flex;align-items:center;gap:12px;">
+      <a href="javascript:void(0)" onclick="openHelpModal()" class="mms-help-btn" title="Click for System Guide & Grams Format">Help</a>
+      <a href="/logout">Logout</a>
+    </div>
     </header>
     <nav>
         <a href="/dashboard">Dashboard</a>
@@ -229,8 +232,8 @@
         <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Updating the unit here will automatically
             synchronize it across all Invoices, Batches (Lots), Transfers, and Dispatches for that Material Code.</p>
 
-        <div class="filter-bar">
-            <form action="/materials/master" method="GET" style="display:flex; gap:10px; width: 100%;">
+        <div class="filter-bar" style="justify-content: space-between;">
+            <form action="/materials/master" method="GET" style="display:flex; gap:10px; flex: 1;">
                 <input type="text" name="search_code" placeholder="Search by Code or Description..."
                     value="{{ search_code }}">
                 <button type="submit">Search Material</button>
@@ -239,6 +242,7 @@
                     style="text-decoration:none; color:#666; align-self:center; font-weight: bold; font-size: 14px;">Clear</a>
                 {% endif %}
             </form>
+            <a href="/reports/material_directory" style="background:#0284c7; color:white; padding:10px 16px; border-radius:5px; text-decoration:none; font-weight:bold; font-size:14px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap;">📋 Wall Chart Directory</a>
         </div>
         <table>
             <thead>
@@ -259,6 +263,8 @@
                             <select name="unit">
                                 <option value="kg" {% if mat.unit=='kg' %}selected{% endif %}>Kg</option>
                                 <option value="litre" {% if mat.unit=='litre' %}selected{% endif %}>Litre</option>
+                                <option value="ml" {% if mat.unit=='ml' %}selected{% endif %}>ML</option>
+                                <option value="grams" {% if mat.unit=='grams' %}selected{% endif %}>Grams</option>
                                 <option value="pcs" {% if mat.unit=='pcs' %}selected{% endif %}>Pieces</option>
                                 <option value="box" {% if mat.unit=='box' %}selected{% endif %}>Box</option>
                                 <option value="meter" {% if mat.unit=='meter' %}selected{% endif %}>Meter</option>
@@ -299,6 +305,7 @@
             });
         });
     </script>
+{% include 'help_modal.html' %}
 </body>
 
 </html>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -135,7 +135,10 @@
       <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
       <h1>Edit Transfer</h1>
     </div>
-    <a href="/logout" style="color: white; text-decoration: none;">Logout</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="javascript:void(0)" onclick="openHelpModal()" class="mms-help-btn" title="Click for System Guide & Grams Format">Help</a>
+      <a href="/logout" style="color: white; text-decoration: none;">Logout</a>
+    </div>
   </header>
 
   <nav>
@@ -202,6 +205,8 @@
             <option value="">--Select Unit--</option>
             <option value="kg" {% if transfer.units=='kg' %}selected{% endif %}>Kg</option>
             <option value="litre" {% if transfer.units=='litre' %}selected{% endif %}>Litre</option>
+            <option value="ml" {% if transfer.units=='ml' %}selected{% endif %}>ML</option>
+            <option value="grams" {% if transfer.units=='grams' %}selected{% endif %}>Grams</option>
             <option value="pcs" {% if transfer.units=='pcs' %}selected{% endif %}>Pieces</option>
             <option value="box" {% if transfer.units=='box' %}selected{% endif %}>Box</option>
             <option value="meter" {% if transfer.units=='meter' %}selected{% endif %}>Meter</option>
@@ -352,6 +357,7 @@
       }
     });
   </script>
+{% include 'help_modal.html' %}
 </body>
 
 </html>

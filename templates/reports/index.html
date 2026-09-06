@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -166,7 +166,10 @@
       <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
       <h1>Reports Dashboard</h1>
     </div>
-    <a href="/logout">Logout</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="javascript:void(0)" onclick="openHelpModal()" class="mms-help-btn" title="Click for System Guide & Grams Format">Help</a>
+      <a href="/logout">Logout</a>
+    </div>
   </header>
 
   <nav>
@@ -189,6 +192,7 @@
     <h2>Select a Report</h2>
 
     <div class="report-links">
+      <a href="/reports/material_directory" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); font-size: 16.5px;">📋 Material Directory (Wall Chart)</a>
       <a href="/reports/daily_ledger">Daily Stock Ledger</a>
       <a href="/reports/department">Material Transfers by Dept</a>
 
@@ -225,6 +229,7 @@
       }
     });
   </script>
+{% include 'help_modal.html' %}
 </body>
 
 </html>

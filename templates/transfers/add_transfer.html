@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -135,7 +135,10 @@
       <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo">
       <h1>Add Transfer</h1>
     </div>
-    <a href="/logout" style="color: white; text-decoration: none;">Logout</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="javascript:void(0)" onclick="openHelpModal()" class="mms-help-btn" title="Click for System Guide & Grams Format">Help</a>
+      <a href="/logout" style="color: white; text-decoration: none;">Logout</a>
+    </div>
   </header>
 
 
@@ -186,6 +189,8 @@
             <option value="">--Select Unit--</option>
             <option value="kg">Kg</option>
             <option value="litre">Litre</option>
+            <option value="ml">ML</option>
+            <option value="grams">Grams</option>
             <option value="pcs">Pieces</option>
             <option value="box">Box</option>
             <option value="meter">Meter</option>
@@ -256,7 +261,7 @@
           $(this).val(ui.item.value);
           $("#material_description").val(ui.item.description);
           if (ui.item.unit) {
-            $("#units").val(ui.item.unit);
+            setUnitValue(ui.item.unit);
           }
 
           // Fetch Lots for this code
@@ -266,6 +271,20 @@
         }
       });
     });
+
+    function setUnitValue(unitStr) {
+      if (!unitStr) return;
+      const u = unitStr.toString().trim().toLowerCase();
+      const select = document.getElementById('units');
+      for (let i = 0; i < select.options.length; i++) {
+        const optVal = select.options[i].value.toLowerCase();
+        const optText = select.options[i].text.toLowerCase();
+        if (optVal === u || optText === u || (u === 'g' && optVal === 'grams') || (u === 'gm' && optVal === 'grams') || (u === 'ltr' && optVal === 'litre')) {
+          select.selectedIndex = i;
+          return;
+        }
+      }
+    }
 
     function fetchLots(code) {
       const lotSelect = document.getElementById('lot_id');
@@ -294,6 +313,9 @@
       if (selectedOption && selectedOption.value) {
         document.getElementById('material_id').value = selectedOption.value;
         document.getElementById('available_in_lot').value = selectedOption.dataset.qty + " " + selectedOption.dataset.unit;
+        if (selectedOption.dataset.unit) {
+          setUnitValue(selectedOption.dataset.unit);
+        }
       } else {
         document.getElementById('material_id').value = "";
         document.getElementById('available_in_lot').value = "";
@@ -322,6 +344,7 @@
       }
     });
   </script>
+{% include 'help_modal.html' %}
 </body>
 
 </html>
