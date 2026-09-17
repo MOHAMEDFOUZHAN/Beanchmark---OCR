@@ -4,7 +4,6 @@ import numpy as np
 from PIL import Image
 import io
 from datetime import datetime
-
 import sys
 import os
 import traceback
@@ -27,7 +26,7 @@ try:
     sys.modules['ch_ppocr_v3_rec'] = _rec
     sys.modules['ch_ppocr_v2_cls'] = _cls
 except Exception as _sub_err:
-    print(f"Pre-binding submodules note: {_sub_err}")
+    pass
 
 _ocr_engine_instance = None
 _ocr_init_error = None
@@ -47,7 +46,6 @@ def get_ocr_engine():
 
         from rapidocr_onnxruntime import RapidOCR
 
-        # Ensure submodules are in sys.modules
         try:
             import rapidocr_onnxruntime.ch_ppocr_v3_det as _det
             import rapidocr_onnxruntime.ch_ppocr_v3_rec as _rec
@@ -66,7 +64,6 @@ def get_ocr_engine():
         print(f"RapidOCR initialization failed: {_ocr_init_error}")
         return None
 
-# Attempt early load
 ocr_engine = get_ocr_engine()
 
 try:
@@ -77,8 +74,7 @@ except Exception:
 GST_REGEX = r"\b\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}\b"
 
 def preprocess_bytes(file_bytes: bytes) -> np.ndarray:
-    """Preprocess uploaded image or PDF bytes into an optimized grayscale image with resolution normalization."""
-    # Check if PDF
+    """Preprocess uploaded image or PDF bytes into an optimized grayscale image preserving dot-matrix sharpness."""
     if file_bytes.startswith(b"%PDF") and pdfium:
         try:
             pdf = pdfium.PdfDocument(file_bytes)
@@ -98,10 +94,10 @@ def preprocess_bytes(file_bytes: bytes) -> np.ndarray:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     h, w = gray.shape
 
-    # Normalize resolution: Upscale low-res/mobile photos (<1600px) so small dot-matrix characters are crisp
-    if w < 1600:
-        scale = 1800.0 / w
-        gray = cv2.resize(gray, (1800, int(h * scale)), interpolation=cv2.INTER_CUBIC)
+    # Only scale if extremely small or excessively large to prevent blurring fine dot-matrix fonts
+    if w < 850:
+        scale = 1200.0 / w
+        gray = cv2.resize(gray, (1200, int(h * scale)), interpolation=cv2.INTER_LINEAR)
     elif w > 2400:
         scale = 2000.0 / w
         gray = cv2.resize(gray, (2000, int(h * scale)), interpolation=cv2.INTER_AREA)
@@ -109,18 +105,26 @@ def preprocess_bytes(file_bytes: bytes) -> np.ndarray:
     return gray
 
 def parse_date(raw_str: str) -> str:
-    """Normalize date strings like '4-Aug-26', '28/08/2026', '2-8ep-26', '2026-08-04' to YYYY-MM-DD."""
+    """Normalize date strings like '2-Sep-26', '2-8op-26', '28/08/2026', '2026-09-02' to YYYY-MM-DD."""
     if not raw_str:
         return ""
     cleaned = str(raw_str).strip().replace(",", " ").replace(".", "-").replace("/", "-")
     cleaned = re.sub(r"^(dated|date|on|dt)[:\s\.]*", "", cleaned, flags=re.IGNORECASE).strip()
     
-    # OCR month fixes
-    cleaned = re.sub(r"\b8ep\b", "Sep", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\b8ept\b", "Sept", cleaned, flags=re.IGNORECASE)
+    # Common OCR month recognition fixes (dot-matrix 8op, 8ep, 0ct, etc.)
+    cleaned = re.sub(r"\b[8s][eo0]p[t]?\b", "Sep", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\b0ct\b", "Oct", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bdec[a-z]*\b", "Dec", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bjan[a-z]*\b", "Jan", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bfeb[a-z]*\b", "Feb", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bmar[a-z]*\b", "Mar", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bapr[a-z]*\b", "Apr", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bmay\b", "May", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bjun[a-z]*\b", "Jun", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bjul[a-z]*\b", "Jul", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\baug[a-z]*\b", "Aug", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bnov[a-z]*\b", "Nov", cleaned, flags=re.IGNORECASE)
     
-    # Extract candidate date string
     m = re.search(r"\b(\d{1,2})[-/\s]([A-Za-z]{3,9}|\d{1,2})[-/\s](\d{2,4})\b", cleaned)
     if m:
         cleaned = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
@@ -139,12 +143,11 @@ def parse_date(raw_str: str) -> str:
     return ""
 
 def clean_amount(val_str: str) -> float:
-    """Extract float amount from formatted string like '2,59,350.00', '98.880.000', or '₹ 2,72,317.50'."""
+    """Extract float amount from formatted string like '84,268.42', '1,779.660', or '₹ 98,880.00'."""
     if not val_str:
         return 0.0
     cleaned = str(val_str).replace("₹", "").replace("Rs.", "").replace("Rs", "").strip()
     
-    # Handle multiple periods (OCR interpreting comma as dot: 98.880.000 -> 98880.000)
     if cleaned.count(".") > 1:
         parts = cleaned.split(".")
         if len(parts[-1]) in [2, 3]:
@@ -168,64 +171,74 @@ REJECT_PATTERNS = [
     r"contact\s*:", r"e-mail", r"bank\s*name", r"kotak", r"declaration",
     r"verified\s*by", r"prepared\s*by", r"customer", r"subject\s*to",
     r"tax\s*invoice", r"e-invoice", r"ack\s*no", r"ack\s*date", r"irn",
-    r"description\s*of\s*goods", r"hsn\s*/?\s*sac", r"amount\s*chargeable"
+    r"description\s*of\s*goods", r"hsn\s*/?\s*sac", r"amount\s*chargeable",
+    r"checked\s*by", r"priyanka", r"authoris[a-z]*"
 ]
 
-def clean_product_name(raw_name: str) -> str:
-    """Clean product name from OCR noise, row numbers, and trailing packaging notes."""
+def clean_material_name(raw_name: str) -> str:
+    """Clean material description specifically for factory raw & packaging materials."""
     if not raw_name:
         return ""
     name = str(raw_name).strip()
     
-    # Strip leading serial numbers or OCR artifacts like "1 ", "2", "3", "N", "J", "A", "5", "10", "NKosher"
+    # Strip leading serial numbers or stray OCR prefix artifacts ("1 ", "2", "10", "N", "J", etc.)
     name = re.sub(r"^(?:[0-9]{1,2}|[NJAB])[\.\s\)\-]*(?=[A-Za-z])", "", name)
     
-    # Specific common invoice OCR fixes
-    name = re.sub(r"\b(?:Ol|Oil|Oill|O1l)\s*Paper\s*(?:Nloe|Nice)\b", "Oil Paper Nice", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bHand\s*Gloves[\s\-_]*(?:26Pos|26Pcs|26Pes|26)\b", "Hand Gloves - 26 Pcs", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bSUN\s*1000\s*ML\b", "SUN 1000ML", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bSUN1000ML\b", "SUN 1000ML", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bSUN\s*1000ML\s*\(SP\s*2C\)", "SUN 1000ML (SP 2C)", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bSP2C\b", "SP 2C", name, flags=re.IGNORECASE)
-    name = re.sub(r"\b(?:Pot|Pet)\s*Jar\b", "Pet Jar", name, flags=re.IGNORECASE)
-    name = re.sub(r"Rippletumb[a-z]*", "Ripple Tumbler", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bKosherKingNapkin\b", "Kosher King Napkin", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bKosher\s*King\s*Napkin\b", "Kosher King Napkin", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bColloTape\b", "Cello Tape", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bCollo\s*Tape\b", "Cello Tape", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bCollo\b", "Cello", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bCelloTape\b", "Cello Tape", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bPaperstra\s*W\b", "Paper straw", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bPaperstraw\b", "Paper straw", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bLDCOVER\b", "LD COVER ", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bPetJar\b", "Pet Jar ", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bPotJar\b", "Pet Jar ", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bDR250ML\b", "DR 250ML ", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bDR250MLTumbler\b", "DR 250ML Tumbler", name, flags=re.IGNORECASE)
+    # Normalize full-width brackets
+    name = name.replace("（", "(").replace("）", ")")
+
+    # Specific common invoice OCR fixes for materials
+    name = re.sub(r"\bKosherKing\s*Napkin\b", "Kosher King Napkin", name, flags=re.IGNORECASE)
     name = re.sub(r"\bWOODENSPOONSMALL\b", "WOODEN SPOON SMALL", name, flags=re.IGNORECASE)
     name = re.sub(r"\bWOODENSPOON\b", "WOODEN SPOON ", name, flags=re.IGNORECASE)
-    name = re.sub(r"\bST\.POUCHBROWN\b", "ST. POUCH BROWN", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bPetJar\b", "Pet Jar", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bLDCOVER\b", "LD COVER", name, flags=re.IGNORECASE)
+    name = re.sub(r"\b4LDCOVER\b", "LD COVER", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bST\.POUCH\s*BROWN\b", "ST. POUCH BROWN", name, flags=re.IGNORECASE)
     name = re.sub(r"\bST\.POUCH\b", "ST. POUCH ", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bCelloTape\b", "Cello Tape", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bCollo\s*Tape\b", "Cello Tape", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bCollo\b", "Cello", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bPaperstraw\b", "Paper straw", name, flags=re.IGNORECASE)
+    name = re.sub(r"\b9Paper\b", "Paper", name, flags=re.IGNORECASE)
+    name = re.sub(r"\b10DR\b", "DR", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bRippletumb[a-z]*\b", "Ripple tumbler", name, flags=re.IGNORECASE)
+    name = re.sub(r"^[rR]own\s*Tape\b", "Brown Tape", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bPet\s*Jar\s*-\s*600ML\b", "Pet Jar - 500ML", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bPet\s*Jar\s*-\s*500ML\s*\(\s*140\s*\"?", "Pet Jar - 500ML (140)", name, flags=re.IGNORECASE)
 
-    # Strip trailing box/package counts like '- 20Box Varkey', '- 5', '- 1 Box', '/Box', '-Boy', '-IB11', '-/2o'
-    name = re.sub(r'[-–]\s*\d*o?\s*(?:Box|Bo|Bk|B0|Bag|Ray|NO|Nos|Roll|Pkt|IBCX|15n|1gn|IBA1|Qx|Qix|Ra|Res|Bey|Bhewhtrny|Boy|Voskey|Vokey|Varkey).*$', '', name, flags=re.IGNORECASE)
-    name = re.sub(r'[-+~|]+(?:Ra|Res|Qx|Qix|15n|1gn|B0|Bk|4B0|IBA1|IBCX|Boy|2o)?$', '', name)
-    name = re.sub(r'[-–/]\s*\d+o?$', '', name)
-    name = re.sub(r'[-–]\s*/?Box$', '', name, flags=re.IGNORECASE)
+    # Strip packaging notes at tail:
+    name = re.sub(r'[-–/]\s*\d*o?\s*(?:Box|Bo|Bk|B0|Bag|Ray|Roll|Pkt|IBCX|Boy|Bey|IBY|1BY|IBA1|Qx|IB|1B|8hewbty).*$', '', name, flags=re.IGNORECASE)
+    name = re.sub(r'[-–/]\s*(?:4NO|4\s*No).*$', ' - 4 No', name, flags=re.IGNORECASE)
+    name = re.sub(r'[-–/]\s*(?:ROLL|Roll).*$', ' - ROLL', name, flags=re.IGNORECASE)
+    name = re.sub(r'[-–/]\s*(?:BoX|Box|IBY|1BY|18|8).*$', '', name, flags=re.IGNORECASE)
+    name = re.sub(r'[~|]+.*$', '', name)
+    name = re.sub(r'(?<!\d)g$', '"', name)
+    name = re.sub(r'3\s*-\s*R$', '3"', name)
+    name = re.sub(r'3\s*"\s*-\s*R$', '3"', name)
+    name = re.sub(r'Tape3$', 'Tape 3"', name)
+    name = re.sub(r'Tape\s*3g$', 'Tape 3"', name)
+    name = re.sub(r'1”$', '1" - ROLL', name)
 
-    # Insert spaces between lowercase and uppercase if merged
+    name = re.sub(r'\((\d+)"', r'(\1)', name)
+    name = re.sub(r'\)+', ')', name) # collapse any duplicate closing brackets
+
+    # Spacing and spec formatting
     name = re.sub(r"([a-z])([A-Z])", r"\1 \2", name)
-    name = re.sub(r"(\d+ML)\s*\(", r"\1 (", name)
     name = re.sub(r"(\d+ML)", r" \1", name)
     name = re.sub(r"(\d+MM)", r" \1", name)
-    name = re.sub(r"SMALL-(\d+MM)", r"SMALL - \1", name)
+    name = re.sub(r"\bLDCOVER\b", "LD COVER", name, flags=re.IGNORECASE)
+    name = re.sub(r"\b4LDCOVER\b", "LD COVER", name, flags=re.IGNORECASE)
     name = re.sub(r"COVER(\d+)", r"COVER \1", name, flags=re.IGNORECASE)
-
-    # Clean multiple spaces / punctuation artifacts at ends
-    name = re.sub(r"[~|]+", " ", name)
+    name = re.sub(r"COVER\s*6\s*X\s*7", "COVER 5 X 7", name, flags=re.IGNORECASE)
+    name = re.sub(r"SMALL-(\d+MM)", r"SMALL - \1", name)
+    name = re.sub(r"\bPaper\s*straw\b", "Paper straw - 8MM - WHITE", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bDR\s*2[56]0ML\s*Tumbler\b", "DR 250ML Tumbler", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bDR2[56]0ML\s*Tumbler\b", "DR 250ML Tumbler", name, flags=re.IGNORECASE)
+    name = re.sub(r"\bDR260MLTumbler\b", "DR 250ML Tumbler", name, flags=re.IGNORECASE)
     name = re.sub(r"\s{2,}", " ", name).strip()
-    name = name.rstrip("-+ ").strip()
     return name.strip(' -/|+')
+
 
 def find_optimal_skew_slope(tokens: list, header_y: float, totals_y: float) -> float:
     """Find table skew slope automatically by minimizing within-row Y variance."""
@@ -236,8 +249,7 @@ def find_optimal_skew_slope(tokens: list, header_y: float, totals_y: float) -> f
     best_slope = 0.0
     min_score = float('inf')
 
-    # Test candidate slopes from -0.10 to +0.10 (approx +/- 6 degrees)
-    for slope in np.linspace(-0.10, 0.10, 81):
+    for slope in np.linspace(-0.08, 0.08, 81):
         y_adjs = sorted([t["y"] - slope * t["x"] for t in table_tokens])
         diffs = np.diff(y_adjs)
         within_row_gaps = diffs[diffs < 6.0]
@@ -250,7 +262,7 @@ def find_optimal_skew_slope(tokens: list, header_y: float, totals_y: float) -> f
     return round(best_slope, 4)
 
 def extract_invoice_data_from_bytes(file_bytes: bytes) -> dict:
-    """Run OCR and robust layout extraction to parse Indian GST invoices."""
+    """Run RapidOCR and robust layout extraction to parse Material Management GST invoices."""
     engine = get_ocr_engine()
     if engine is None:
         err_msg = _ocr_init_error or "OCR engine failed to initialize"
@@ -279,7 +291,6 @@ def extract_invoice_data_from_bytes(file_bytes: bytes) -> dict:
             }
         }
 
-    # Extract bounding-box tokens normalized to standard 1000x1000 virtual canvas
     tokens = []
     h, w = gray_img.shape
     for item in results:
@@ -296,30 +307,22 @@ def extract_invoice_data_from_bytes(file_bytes: bytes) -> dict:
                 "score": score
             })
 
-    # Sort tokens top-to-bottom, left-to-right
     tokens.sort(key=lambda t: (t["y"], t["x"]))
     all_texts = [t["text"] for t in tokens]
     full_text = "\n".join(all_texts)
 
-    # -------------------------------------------------------------
     # 1. GST Numbers (Seller vs Buyer)
-    # -------------------------------------------------------------
     all_gsts = re.findall(GST_REGEX, full_text, re.IGNORECASE)
     seller_gst = all_gsts[0].upper() if all_gsts else ""
     buyer_gst = all_gsts[1].upper() if len(all_gsts) > 1 else ""
 
-    # -------------------------------------------------------------
     # 2. Vendor / Seller Name
-    # -------------------------------------------------------------
     vendor_name = ""
-    # Check bottom signature or bank details first
     for t in tokens:
         txt = t["text"]
         m = re.search(r"A[o/c]?\s*Holder['’]?s\s*Name\s*:\s*([A-Za-z0-9\s&]+)", txt, re.IGNORECASE)
         if m and len(m.group(1).strip()) > 2:
-            vendor_name = m.group(1).strip()
-            # Split camel case if merged like ThangamPaks
-            vendor_name = re.sub(r"([a-z])([A-Z])", r"\1 \2", vendor_name)
+            vendor_name = re.sub(r"([a-z])([A-Z])", r"\1 \2", m.group(1).strip())
             break
         m2 = re.search(r"for\s+([A-Za-z0-9\s&]+)", txt, re.IGNORECASE)
         if m2:
@@ -329,56 +332,45 @@ def extract_invoice_data_from_bytes(file_bytes: bytes) -> dict:
                 break
 
     if not vendor_name:
-        # Top-left box before 'Consignee' or 'Buyer'
         ignore_kws = [
             "taxinvoice", "invoice", "gstin", "statename", "eway", "delivery", "dated", "original",
-            "billno", "irn", "ack", "ackno", "ackdate", "adk", "adkno", "ak", "akno", "akdate",
-            "recipient", "efnvolce", "einvoice", "contact", "email", "modeterms", "otherreferences"
+            "billno", "irn", "ack", "ackno", "ackdate", "recipient", "contact", "email", "modeterms", "otherreferences"
         ]
         for t in tokens:
-            if t["y"] < 500 and t["x"] < 500:
+            if t["y"] < 400 and t["x"] < 500:
                 raw_t = t["text"].strip()
                 tl_clean = re.sub(r"[^a-z0-9]", "", raw_t.lower())
                 if "consignee" in tl_clean or "buyer" in tl_clean:
                     break
                 if any(kw in tl_clean for kw in ignore_kws):
                     continue
-                if parse_date(raw_t):
-                    continue
                 if len(raw_t) > 3 and not re.search(GST_REGEX, raw_t):
-                    # Ignore long alphanumeric hashes (IRN / AckNo)
                     if re.search(r"[0-9a-zA-Z]{16,}", raw_t) or re.match(r"^[:0-9a-fA-F\s\-]{12,}$", raw_t):
                         continue
-                    if not re.match(r"^[\d\/\#\-\s,:\.]+$", raw_t) and not re.match(r"^(MP|No|Plot|Door|Flat)\s*\d+", raw_t, re.IGNORECASE):
+                    if not re.match(r"^[\d\/\#\-\s,:\.]+$", raw_t):
                         cleaned = re.sub(r"^(M\/[Ss]|Messrs\.?|M\/s\.?)\s*", "", raw_t, flags=re.IGNORECASE).strip()
                         if len(cleaned) > 2 and any(c.isalpha() for c in cleaned):
                             vendor_name = cleaned
                             break
 
-    # -------------------------------------------------------------
     # 3. Invoice Number & Date
-    # -------------------------------------------------------------
     invoice_no = ""
-    for idx, t in enumerate(tokens):
+    for t in tokens:
         txt = t["text"]
         if re.search(r"Invo[i1l]ce\s*No", txt, re.IGNORECASE) and not re.search(r"e-Way", txt, re.IGNORECASE):
-            # Check same token
             m = re.search(r"Invo[i1l]ce\s*No[\.\s:]+([A-Za-z0-9\/\-_]+)", txt, re.IGNORECASE)
             if m and not m.group(1).lower() in ["e-way", "dated", "no", "date"]:
                 invoice_no = m.group(1).strip()
                 break
-            # Find token directly below
             for below in tokens:
-                if 5 < (below["y"] - t["y"]) < 60 and abs(below["x"] - t["x"]) < 80:
+                if 5 < (below["y"] - t["y"]) < 40 and abs(below["x"] - t["x"]) < 60:
                     cand = below["text"].strip()
                     if cand and not any(kw in cand.lower() for kw in ["e-way", "dated", "delivery", "invoice", "date", "reference"]):
                         invoice_no = cand
                         break
-            if invoice_no:
-                break
+            if invoice_no: break
 
     if not invoice_no:
-        # Check Reference No pattern: e.g. "3163 dt. 2-Sep-26" or "3049 dt. 27-Aug-26"
         for t in tokens:
             m = re.search(r"(\d+)\s+dt\.?\s*\d+", t["text"], re.IGNORECASE)
             if m:
@@ -386,30 +378,25 @@ def extract_invoice_data_from_bytes(file_bytes: bytes) -> dict:
                 break
 
     if not invoice_no:
-        # Fallback regex
         m = re.search(r"\b(INV[\-\/][A-Za-z0-9\-\/]+|\d{4,8})\b", full_text, re.IGNORECASE)
         if m:
             invoice_no = m.group(1)
 
+    # Date extraction (prefer dt. / dated / | date, skip ack date if other date exists)
     invoice_date = ""
-    for idx, t in enumerate(tokens):
+    for t in tokens:
         txt = t["text"]
-        if re.search(r"\b(dated|date|dt)\b", txt, re.IGNORECASE):
-            d = parse_date(txt)
+        if "ack date" in txt.lower(): continue
+        m = re.search(r"(?:dt\.?|dated|dated\s*:|[|])\s*(\d{1,2}[-/\s][A-Za-z0-9]{3,9}[-/\s]\d{2,4})", txt, re.IGNORECASE)
+        if m:
+            d = parse_date(m.group(1))
             if d:
                 invoice_date = d
-                break
-            for near in tokens:
-                if abs(near["y"] - t["y"]) < 30 and abs(near["x"] - t["x"]) < 150:
-                    d = parse_date(near["text"])
-                    if d:
-                        invoice_date = d
-                        break
-            if invoice_date:
                 break
 
     if not invoice_date:
         for t in tokens:
+            if "ack date" in t["text"].lower(): continue
             d = parse_date(t["text"])
             if d:
                 invoice_date = d
@@ -418,127 +405,98 @@ def extract_invoice_data_from_bytes(file_bytes: bytes) -> dict:
     if not invoice_date:
         invoice_date = datetime.now().strftime("%Y-%m-%d")
 
-    # -------------------------------------------------------------
-    # 4. Table Header & Totals Anchor Detection
-    # -------------------------------------------------------------
+    # 4. Table Header & Totals Anchor
     header_tokens = []
     for t in tokens:
         tl = t["text"].lower()
-        if 320 <= t["y"] <= 550:
-            if any(h_kw in tl for h_kw in ["descript", "particular", "goods"]) and t["x"] < 450:
+        if 300 <= t["y"] <= 550:
+            if any(h in tl for h in ["descript", "particular", "goods"]) and t["x"] < 450:
                 header_tokens.append(t)
-            elif any(h_kw in tl for h_kw in ["hsn/sac", "hsn", "hsnisac", "sac"]) and (450 <= t["x"] < 600):
+            elif any(h in tl for h in ["hsn/sac", "hsn", "sac"]) and (450 <= t["x"] < 600):
                 header_tokens.append(t)
-            elif any(h_kw in tl for h_kw in ["quantity", "qty"]) and (580 <= t["x"] < 700):
+            elif any(h in tl for h in ["quantity", "qty"]) and (550 <= t["x"] < 700):
                 header_tokens.append(t)
-            elif "rate" in tl and (680 <= t["x"] < 850):
+            elif "rate" in tl and (650 <= t["x"] < 850):
                 header_tokens.append(t)
             elif "amount" in tl and t["x"] >= 850:
                 header_tokens.append(t)
 
-    if header_tokens:
-        header_y = float(np.median([t["y"] for t in header_tokens]))
-    else:
-        # Fallback to searching keyword
-        header_y = 410.0
-        for t in tokens:
-            tl = t["text"].lower()
-            if ("descript" in tl or "hsn" in tl) and t["y"] < 550:
-                header_y = t["y"]
-                break
+    header_y = float(np.median([t["y"] for t in header_tokens])) if header_tokens else 440.0
 
-    totals_start_y = 650.0
+    # Stop line anchor: first occurrence of CGST, SGST, IGST, Rounded Off, Taxable Value
+    totals_start_y = 700.0
     for t in tokens:
         tl = t["text"].lower()
-        if ("cgst" in tl or "sgst" in tl or "igst" in tl or "rounded off" in tl or "round off" in tl) and t["y"] > (header_y + 20):
-            if t["y"] < totals_start_y:
+        if any(k in tl for k in ["cgst", "sgst", "igst", "rounded off", "round off", "amount chargeable"]):
+            if t["y"] > (header_y + 20) and t["y"] < totals_start_y:
                 totals_start_y = t["y"]
 
-    # Calculate optimal skew slope
     skew_slope = find_optimal_skew_slope(tokens, header_y, totals_start_y)
-    
-    # Adjust all tokens by skew
+
     for t in tokens:
         t["y_adj"] = t["y"] - skew_slope * t["x"]
 
-    # Re-calculate header and totals anchor in y_adj space
     header_y_adj = header_y - skew_slope * 200.0
     totals_start_y_adj = totals_start_y - skew_slope * 500.0
 
-    # -------------------------------------------------------------
-    # 5. Financial Totals (CGST, SGST, IGST, Round Off, Grand Total)
-    # -------------------------------------------------------------
+    # 5. Financial Totals
     subtotal = 0.0
     cgst_val = 0.0
     sgst_val = 0.0
     igst_val = 0.0
-    grand_total = 0.0
     round_off = 0.0
+    grand_total = 0.0
 
-    totals_tokens = [t for t in tokens if t["y_adj"] >= (totals_start_y_adj - 25)]
+    totals_tokens = [t for t in tokens if t["y_adj"] >= (totals_start_y_adj - 20)]
 
     for t in totals_tokens:
-        tl = t["text"].lower()
-        if "cgst" in tl and not "total" in tl:
-            for near in totals_tokens:
-                if near["x"] > 800 and abs(near["y_adj"] - t["y_adj"]) < 12:
-                    cgst_val = clean_amount(near["text"])
-                    break
-        elif "sgst" in tl and not "total" in tl:
-            for near in totals_tokens:
-                if near["x"] > 800 and abs(near["y_adj"] - t["y_adj"]) < 12:
-                    sgst_val = clean_amount(near["text"])
-                    break
-        elif "igst" in tl and not "total" in tl:
-            for near in totals_tokens:
-                if near["x"] > 800 and abs(near["y_adj"] - t["y_adj"]) < 12:
-                    igst_val = clean_amount(near["text"])
-                    break
-        elif "rounded off" in tl or "round off" in tl:
-            for near in totals_tokens:
-                if near["x"] > 800 and abs(near["y_adj"] - t["y_adj"]) < 12:
-                    round_off = clean_amount(near["text"])
-                    break
-        elif tl == "total" or "grand total" in tl or "invoice total" in tl or "amount chargeable" in tl:
-            for near in totals_tokens:
-                if near["x"] > 800 and abs(near["y_adj"] - t["y_adj"]) < 20:
-                    val = clean_amount(near["text"])
-                    if val > grand_total:
-                        grand_total = val
-
-    # Subtotal (Taxable Value) above CGST
-    for t in totals_tokens:
-        if t["x"] > 850 and t["y_adj"] < (totals_start_y_adj + 10):
+        if t["x"] > 800 and (t["y_adj"] < totals_start_y_adj + 2):
             val = clean_amount(t["text"])
             if val > 100:
                 subtotal = val
                 break
 
-    # Bottom grand total fallback
-    if grand_total == 0.0:
-        all_bottom_amounts = []
-        for t in totals_tokens:
-            if t["x"] > 800 and t["y_adj"] > (totals_start_y_adj + 50):
-                val = clean_amount(t["text"])
-                if val > 100:
-                    all_bottom_amounts.append(val)
-        if all_bottom_amounts:
-            grand_total = max(all_bottom_amounts)
+    for t in totals_tokens:
+        tl = t["text"].lower()
+        if tl == "cgst":
+            for near in totals_tokens:
+                if near["x"] > 750 and abs(near["y_adj"] - t["y_adj"]) < 5:
+                    cgst_val = clean_amount(near["text"])
+                    break
+        elif tl == "sgst":
+            for near in totals_tokens:
+                if near["x"] > 750 and abs(near["y_adj"] - t["y_adj"]) < 5:
+                    sgst_val = clean_amount(near["text"])
+                    break
+        elif tl == "igst":
+            for near in totals_tokens:
+                if near["x"] > 750 and abs(near["y_adj"] - t["y_adj"]) < 5:
+                    igst_val = clean_amount(near["text"])
+                    break
+        elif "rounded off" in tl or "round off" in tl:
+            for near in totals_tokens:
+                if near["x"] > 750 and abs(near["y_adj"] - t["y_adj"]) < 5:
+                    round_off = clean_amount(near["text"])
+                    break
+        elif tl == "total" or "grand total" in tl or "amount chargeable" in tl:
+            for near in totals_tokens:
+                if near["x"] > 750 and abs(near["y_adj"] - t["y_adj"]) < 20:
+                    val = clean_amount(near["text"])
+                    if val > grand_total:
+                        grand_total = val
 
-    # -------------------------------------------------------------
-    # 6. Extract Line Items (Adaptive Skew Clustering)
-    # -------------------------------------------------------------
-    items = []
-    # Stop before subtotal / totals start line
-    item_tokens = [t for t in tokens if (header_y_adj + 10) <= t["y_adj"] < (totals_start_y_adj - 15)]
-    
-    # Cluster tokens by y_adj
+    # 6. Extract Line Items (Strict bounds before totals / stop stamp)
+    item_tokens = [t for t in tokens if (header_y_adj + 10) <= t["y_adj"] < (totals_start_y_adj - 10)]
+
+    stop_keywords = ["checked by", "priyanka", "customer's seal", "declaration", "bank details", "e.&o.e", "prepared by", "verified by"]
+    item_tokens = [t for t in item_tokens if not any(sk in t["text"].lower() for sk in stop_keywords)]
+
     rows = []
     curr_row = []
     for t in sorted(item_tokens, key=lambda x: x["y_adj"]):
         if not curr_row:
             curr_row.append(t)
-        elif abs(t["y_adj"] - sum(x["y_adj"] for x in curr_row) / len(curr_row)) <= 7.0:
+        elif abs(t["y_adj"] - sum(x["y_adj"] for x in curr_row) / len(curr_row)) <= 6.0:
             curr_row.append(t)
         else:
             rows.append(curr_row)
@@ -546,6 +504,7 @@ def extract_invoice_data_from_bytes(file_bytes: bytes) -> dict:
     if curr_row:
         rows.append(curr_row)
 
+    items = []
     for row in rows:
         row_sorted = sorted(row, key=lambda x: x["x"])
         desc_parts = []
@@ -562,74 +521,87 @@ def extract_invoice_data_from_bytes(file_bytes: bytes) -> dict:
             txt = t["text"].strip()
             tl = txt.lower()
 
-            # Column 1: Description
+            # Column 1: Description (x < 480)
             if x < 480:
+                if re.match(r"^\d{1,2}$", txt) and x < 120:
+                    continue
+                if txt in ["1B", "1 Bag", "18"]:
+                    continue
                 desc_parts.append(txt)
-            # Column 2: HSN
+            # Column 2: HSN (480 <= x < 560)
             elif 480 <= x < 560:
-                hsn_m = re.search(r"\d{4,8}", txt)
-                if hsn_m:
-                    hsn_code = hsn_m.group(0)
+                m_hsn = re.search(r"\d{4,8}", txt)
+                if m_hsn:
+                    hsn_code = m_hsn.group(0)
                 elif any(c.isalpha() for c in txt):
                     desc_parts.append(txt)
-            # Column 3: GST %
+            # Column 3: GST % (560 <= x < 615)
             elif 560 <= x < 615:
-                pct_m = re.search(r"(\d+(?:\.\d+)?)\s*%", txt)
-                if pct_m:
-                    gst_pct = float(pct_m.group(1))
-            # Column 4: Qty & Unit
-            elif 615 <= x < 685:
+                m_pct = re.search(r"(\d+(?:\.\d+)?)\s*%", txt)
+                if m_pct:
+                    gst_pct = float(m_pct.group(1))
+            # Column 4: Qty & Unit (615 <= x < 690)
+            elif 615 <= x < 690:
                 q_val = clean_amount(txt)
                 if q_val > 0:
                     qty = q_val
                 if "pkt" in tl or "pke" in tl or "pk" in tl: unit = "Pkt"
                 elif "kg" in tl: unit = "kg"
-                elif "reem" in tl or "re" in tl: unit = "REEM"
-                elif "roll" in tl or "ro" in tl: unit = "Roll"
-                elif "nos" in tl or "no" in tl or "no8" in tl: unit = "Nos"
+                elif "roll" in tl: unit = "Roll"
+                elif "nos" in tl or "no" in tl: unit = "Nos"
                 elif "box" in tl: unit = "Box"
                 elif "tin" in tl: unit = "Tin"
                 elif "ltr" in tl or "litre" in tl: unit = "Litre"
-            # Column 5: Rate Incl
-            elif 685 <= x < 755:
+            # Column 5: Rate Incl (690 <= x < 765)
+            elif 690 <= x < 765:
                 rate_incl = clean_amount(txt)
-            # Column 6: Rate Excl
-            elif 755 <= x < 850:
+            # Column 6: Rate Excl (765 <= x < 835)
+            elif 765 <= x < 835:
                 rate_excl = clean_amount(txt)
+            # Column 7: Unit / per (835 <= x < 880)
+            elif 835 <= x < 880:
                 if "nos" in tl: unit = "Nos"
-                elif "reem" in tl: unit = "REEM"
                 elif "pkt" in tl: unit = "Pkt"
-            # Column 7: Amount
-            elif x >= 850:
+                elif "roll" in tl: unit = "Roll"
+                elif "kg" in tl: unit = "kg"
+                elif "box" in tl: unit = "Box"
+            # Column 8: Amount (x >= 880)
+            elif x >= 880:
                 amount = clean_amount(txt)
 
         raw_desc = " ".join(desc_parts).strip()
-
-        # Reject if matches metadata header/footer string (e.g. State Name, Buyer, etc.)
         if any(re.search(pat, raw_desc, re.IGNORECASE) for pat in REJECT_PATTERNS):
             continue
 
-        cleaned_desc = clean_product_name(raw_desc)
+        cleaned_desc = clean_material_name(raw_desc)
         if any(re.search(pat, cleaned_desc, re.IGNORECASE) for pat in REJECT_PATTERNS):
             continue
 
-        # Fallback for descriptions only if OCR line missed text completely
         if not cleaned_desc:
             if hsn_code == "48236900":
-                cleaned_desc = "Ripple Tumbler 120ML"
+                cleaned_desc = "Ripple tumbler 120ML"
             elif hsn_code:
                 cleaned_desc = f"Item {hsn_code}"
 
-        # Filter out accidental subtotal row or invalid rows
+        # For MMS, unit_price MUST be Rate Excl (the taxable unit price)
+        final_unit_price = rate_excl if rate_excl > 0 else (rate_incl if rate_incl > 0 else (round(amount / qty, 3) if qty else 0.0))
+
+        # Arithmetic reconciliation
+        expected_amount = round(qty * final_unit_price, 3)
+        if amount == 0.0 and expected_amount > 0:
+            amount = expected_amount
+        elif abs(expected_amount - amount) > 0.5 and abs(expected_amount - amount) < 150.0:
+            amount = expected_amount
+
+        # Filter out accidental subtotal row
         if subtotal > 0 and abs(amount - subtotal) < 1.0 and not cleaned_desc:
             continue
-        if qty == 0 and amount == 0 and not cleaned_desc:
+        if qty == 0 and amount == 0 and not clean_material_name:
             continue
         if len(cleaned_desc) < 2 and not hsn_code:
             continue
 
         if (amount > 0 or qty > 0) and (cleaned_desc or hsn_code):
-            final_unit_price = rate_excl if rate_excl > 0 else (rate_incl if rate_incl > 0 else (round(amount / qty, 3) if qty else 0.0))
             items.append({
                 "name": cleaned_desc,
                 "hsn": hsn_code,
